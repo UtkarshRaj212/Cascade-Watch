@@ -96,7 +96,7 @@ export function FacilityRiskMap({
   return (
     <div className="flex flex-col h-full bg-black border border-[#222222] rounded-xl overflow-hidden shadow-sm">
       {/* Map Control Bar */}
-      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-[#222222] bg-[#0a0a0a]">
+      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 border-b border-[#222222] bg-[#0a0a0a] shrink-0">
         <div className="flex items-center gap-3">
           <Network className="w-5 h-5 text-neutral-300" />
           <div>
@@ -129,7 +129,7 @@ export function FacilityRiskMap({
           {/* Zoom Actions */}
           <div className="flex items-center gap-1 bg-black border border-[#262626] rounded-lg p-1">
             <button
-              onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2.0))}
+              onClick={() => setZoomLevel((z) => Math.min(z + 0.25, 3))}
               title="Zoom In"
               className="p-1.5 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded-md transition-colors"
               aria-label="Zoom In"
@@ -137,7 +137,7 @@ export function FacilityRiskMap({
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.8))}
+              onClick={() => setZoomLevel((z) => Math.max(z - 0.25, 0.75))}
               title="Zoom Out"
               className="p-1.5 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded-md transition-colors"
               aria-label="Zoom Out"
@@ -160,7 +160,7 @@ export function FacilityRiskMap({
       </div>
 
       {/* SVG Canvas */}
-      <div className="relative flex-1 bg-black overflow-hidden min-h-[460px]">
+      <div className="relative flex-1 bg-black overflow-hidden min-h-0">
         <svg
           className="w-full h-full cursor-grab active:cursor-grabbing select-none"
           viewBox="0 0 850 520"
@@ -253,8 +253,8 @@ export function FacilityRiskMap({
                 state.facility.tier === "Tertiary"
                   ? 14
                   : state.facility.tier === "Secondary"
-                  ? 11
-                  : 8;
+                    ? 11
+                    : 8;
 
               return (
                 <g
@@ -349,8 +349,8 @@ export function FacilityRiskMap({
                     {state.dynamicRiskStatus === "insufficient_data"
                       ? "NO TELEMETRY"
                       : state.isStockedOutNow
-                      ? "STOCKED OUT"
-                      : `${state.effectiveDaysCover}d cover`}
+                        ? "STOCKED OUT"
+                        : `${state.effectiveDaysCover}d cover`}
                   </text>
                 </g>
               );
@@ -363,15 +363,14 @@ export function FacilityRiskMap({
           <div className="absolute bottom-4 left-4 bg-[#0a0a0a]/95 border border-[#333333] rounded-lg p-3.5 shadow-2xl text-xs z-20 pointer-events-none font-mono min-w-[270px]">
             <div className="flex items-center justify-between border-b border-[#222222] pb-2 mb-2">
               <span className="font-bold text-white text-sm">{hoveredState.facility.name}</span>
-              <span className={`text-[11px] px-2 py-0.5 rounded font-bold uppercase ${
-                hoveredState.dynamicRiskStatus === "critical"
+              <span className={`text-[11px] px-2 py-0.5 rounded font-bold uppercase ${hoveredState.dynamicRiskStatus === "critical"
                   ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
                   : hoveredState.dynamicRiskStatus === "warning"
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                  : hoveredState.dynamicRiskStatus === "low"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                  : "bg-neutral-800 text-neutral-300"
-              }`}>
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                    : hoveredState.dynamicRiskStatus === "low"
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                      : "bg-neutral-800 text-neutral-300"
+                }`}>
                 {hoveredState.dynamicRiskStatus}
               </span>
             </div>
@@ -402,9 +401,9 @@ export function FacilityRiskMap({
       </div>
 
       {/* Map Footer Bar */}
-      <div className="px-5 py-2.5 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-xs text-neutral-400 font-mono">
+      <div className="px-4 py-2 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-xs text-neutral-400 font-mono shrink-0">
         <span>Click any facility node to inspect stock trajectory & referral cascade propagation</span>
-        <span className="text-neutral-500">Arrows indicate regional escalation / deflection direction</span>
+        <span className="text-neutral-500 hidden sm:inline">Arrows indicate regional escalation / deflection direction</span>
       </div>
     </div>
   );

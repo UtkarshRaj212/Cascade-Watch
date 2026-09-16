@@ -4,15 +4,10 @@ import React, { useState, useMemo, useCallback } from "react";
 import { Facility, Drug, FacilityInventory, ReferralLink } from "@/lib/db/schema";
 import { runCascadeSimulation, SimulationResult } from "@/lib/simulation";
 import { DashboardHeader } from "./DashboardHeader";
-import { SideNav, DashboardSection } from "./SideNav";
+import { DeepDivePanel } from "./DeepDivePanel";
 import { KpiSummary } from "./KpiSummary";
 import { FacilityRiskMap } from "./FacilityRiskMap";
-import { RiskAlertPanel } from "./RiskAlertPanel";
-import { FacilityDetails } from "./FacilityDetails";
-import { StockTrajectoryChart } from "./StockTrajectoryChart";
-import { CascadeSummary } from "./CascadeSummary";
-import { CascadeTimeline } from "./CascadeTimeline";
-import { Activity, Network, Waves, TrendingDown, ShieldAlert, Layers } from "lucide-react";
+import { Network, Activity, ArrowRight, Layers } from "lucide-react";
 
 interface DashboardContainerProps {
   initialData: {
@@ -39,9 +34,8 @@ export function DashboardContainer({ initialData }: DashboardContainerProps) {
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>("fac-pune-dh");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [lastAnalysisTimestamp, setLastAnalysisTimestamp] = useState<string>("Live Telemetry Stream");
-  const [isSideNavOpen, setIsSideNavOpen] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<DashboardSection>("all");
+  const [lastAnalysisTimestamp, setLastAnalysisTimestamp] = useState<string>("Live Stream Active");
+  const [isDeepDiveOpen, setIsDeepDiveOpen] = useState<boolean>(false);
 
   const simulationResult: SimulationResult = useMemo(() => {
     return runCascadeSimulation({
@@ -112,26 +106,26 @@ export function DashboardContainer({ initialData }: DashboardContainerProps) {
     setSelectedFacilityId(facilityId);
   }, []);
 
-  const shouldShowSection = (section: DashboardSection) => {
-    return activeSection === "all" || activeSection === section;
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-black text-[#ededed] font-sans selection:bg-white selection:text-black">
-      {/* Side Navigation Drawer (Vercel Style) */}
-      <SideNav
-        isOpen={isSideNavOpen}
-        onClose={() => setIsSideNavOpen(false)}
-        activeSection={activeSection}
-        onSelectSection={setActiveSection}
-        selectedDistrict={selectedDistrict}
-        selectedDrugName={selectedDrug?.name || "Essential Medicine"}
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-black text-[#ededed] font-sans selection:bg-white selection:text-black">
+      {/* Deep-Dive Side Drawer (opens upon clicking hamburger button) */}
+      <DeepDivePanel
+        isOpen={isDeepDiveOpen}
+        onClose={() => setIsDeepDiveOpen(false)}
+        selectedState={currentSelectedState}
+        selectedDrug={selectedDrug}
+        simDay={currentSimDay}
         horizonDays={horizonDays}
-        totalFacilitiesCount={simulationResult.facilityStateList.length}
-        criticalCount={simulationResult.kpis.criticalFacilities}
+        onSelectSimDay={setCurrentSimDay}
+        isPlaying={isPlaying}
+        onTogglePlay={() => setIsPlaying(!isPlaying)}
+        cascade={simulationResult.cascade}
+        facilityStates={simulationResult.facilityStateList}
+        selectedFacilityId={selectedFacilityId}
+        onSelectFacility={handleSelectFacility}
       />
 
-      {/* Dashboard Header with Hamburger and Section Navigation */}
+      {/* Clean Dashboard Header (Ribbon completely removed) */}
       <DashboardHeader
         districts={districts}
         selectedDistrict={selectedDistrict}
@@ -144,209 +138,59 @@ export function DashboardContainer({ initialData }: DashboardContainerProps) {
         onRunAnalysis={handleRunAnalysis}
         isAnalyzing={isAnalyzing}
         lastAnalysisTimestamp={lastAnalysisTimestamp}
-        onOpenSideNav={() => setIsSideNavOpen(true)}
-        activeSection={activeSection}
-        onSelectSection={setActiveSection}
+        onOpenSideNav={() => setIsDeepDiveOpen(true)}
       />
 
-      {/* Main Content Workspace - Vercel Spacious Layout */}
-      <main className="flex-1 max-w-[1700px] w-full mx-auto px-6 py-8 space-y-10">
-
-        {/* SECTION 1: Executive Macro Overview & Regional KPIs */}
-        {shouldShowSection("overview") && (
-          <section id="section-overview" className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-white">
-                  <Activity className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-base lg:text-lg font-bold text-white tracking-tight font-mono">
-                    1. Regional Supply Chain Overview & Macro KPIs
-                  </h2>
-                  <p className="text-xs text-neutral-400 font-mono">
-                    District-wide situational awareness &bull; Cumulative deficit metrics over {horizonDays}-day horizon
-                  </p>
-                </div>
-              </div>
-              <div className="text-xs font-mono text-neutral-400 bg-[#0a0a0a] border border-[#222222] px-3 py-1.5 rounded-lg">
-                Scope: <span className="text-white font-semibold">{selectedDistrict === "all" ? "All Districts" : `${selectedDistrict} District`}</span> &bull; <span className="text-white font-semibold">{selectedDrug?.name}</span>
-              </div>
-            </div>
-
-            {/* KPI Cards Grid */}
-            <KpiSummary
-              criticalFacilities={simulationResult.kpis.criticalFacilities}
-              facilitiesAtRisk={simulationResult.kpis.facilitiesAtRisk}
-              expectedStockouts={simulationResult.kpis.expectedStockouts}
-              unmetDemandUnits={simulationResult.kpis.unmetDemandUnits}
-              averageDaysCover={simulationResult.kpis.averageDaysCover}
-              unit={selectedDrug?.unit || "vials"}
-              horizonDays={horizonDays}
+      {/* Main Dashboard Screen: Network Map on the Left, 5 Stats Boxes on the Right */}
+      <main className="flex-1 max-w-[1750px] w-full mx-auto px-4 sm:px-6 py-3 lg:py-3.5 flex flex-col min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-stretch flex-1 min-h-0">
+          {/* Left Side: Healthcare Facility Risk & Referral Topology Map (7 cols on lg, 8 cols on xl) */}
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col h-full min-h-[420px] lg:min-h-0">
+            <FacilityRiskMap
+              facilityStates={simulationResult.facilityStateList}
+              referralLinks={referralLinks}
+              selectedFacilityId={selectedFacilityId}
+              onSelectFacility={handleSelectFacility}
+              cascadeActiveLinks={simulationResult.cascade.affectedReferralLinkIds}
+              focalFacilityId={focalFacilityId}
               simDay={currentSimDay}
             />
-          </section>
-        )}
+          </div>
 
-        {/* SECTION 2: Regional Network Topology & Referral Vulnerability Map */}
-        {shouldShowSection("network-map") && (
-          <section id="section-network-map" className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-white">
-                  <Network className="w-4 h-4 text-sky-400" />
-                </div>
-                <div>
-                  <h2 className="text-base lg:text-lg font-bold text-white tracking-tight font-mono">
-                    2. Healthcare Facility Risk & Referral Topology Map
-                  </h2>
-                  <p className="text-xs text-neutral-400 font-mono">
-                    Spatial layout of healthcare facilities, clinical tiers, and patient referral transfer vectors
-                  </p>
-                </div>
+          {/* Right Side: Macro Overview / 5 Stats Boxes (5 cols on lg, 4 cols on xl) */}
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-0 justify-between">
+            <div className="flex items-center justify-between pb-2 mb-1 border-b border-[#222222] shrink-0">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" />
+                <span className="font-semibold text-white text-xs uppercase tracking-wider font-mono">
+                  Macro Overview &bull; District Health KPIs
+                </span>
               </div>
-              <div className="text-xs font-mono text-neutral-400 bg-[#0a0a0a] border border-[#222222] px-3 py-1.5 rounded-lg">
-                Interactive: Click any node to audit facility & trajectory
-              </div>
+              <button
+                onClick={() => setIsDeepDiveOpen(true)}
+                className="text-xs font-mono text-neutral-400 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <span>Full Deep Dive</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
             </div>
 
-            {/* Map Container */}
-            <div className="h-[520px]">
-              <FacilityRiskMap
-                facilityStates={simulationResult.facilityStateList}
-                referralLinks={referralLinks}
-                selectedFacilityId={selectedFacilityId}
-                onSelectFacility={handleSelectFacility}
-                cascadeActiveLinks={simulationResult.cascade.affectedReferralLinkIds}
-                focalFacilityId={focalFacilityId}
+            {/* Vertical Stack of 5 KPI Stats Boxes */}
+            <div className="flex-1 min-h-0 flex flex-col justify-between">
+              <KpiSummary
+                criticalFacilities={simulationResult.kpis.criticalFacilities}
+                facilitiesAtRisk={simulationResult.kpis.facilitiesAtRisk}
+                expectedStockouts={simulationResult.kpis.expectedStockouts}
+                unmetDemandUnits={simulationResult.kpis.unmetDemandUnits}
+                averageDaysCover={simulationResult.kpis.averageDaysCover}
+                unit={selectedDrug?.unit || "vials"}
+                horizonDays={horizonDays}
                 simDay={currentSimDay}
+                isVertical={true}
               />
             </div>
-          </section>
-        )}
-
-        {/* SECTION 3: Cascade Propagation & Ripple Spillover Analysis */}
-        {shouldShowSection("cascade-intel") && (
-          <section id="section-cascade-intel" className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-white">
-                  <Waves className="w-4 h-4 text-rose-400" />
-                </div>
-                <div>
-                  <h2 className="text-base lg:text-lg font-bold text-white tracking-tight font-mono">
-                    3. Cascade Propagation & Referral Spillover Analysis
-                  </h2>
-                  <p className="text-xs text-neutral-400 font-mono">
-                    Simulate how stockout at the primary hospital deflects demand onto secondary referral facilities
-                  </p>
-                </div>
-              </div>
-              <div className="text-xs font-mono text-neutral-400 bg-[#0a0a0a] border border-[#222222] px-3 py-1.5 rounded-lg">
-                Cascade Engine: Day T+{currentSimDay} &bull; Wave: {simulationResult.cascade.cascadeWaveReached.split(" - ")[0]}
-              </div>
-            </div>
-
-            {/* Interactive Timeline Scrubber */}
-            <CascadeTimeline
-              simDay={currentSimDay}
-              horizonDays={horizonDays}
-              onSelectSimDay={setCurrentSimDay}
-              isPlaying={isPlaying}
-              onTogglePlay={() => setIsPlaying(!isPlaying)}
-              primaryStockoutDay={simulationResult.cascade.primaryStockoutDay}
-              replenishmentDeliveryDay={currentSelectedState?.inventory.nextDeliveryDays || null}
-            />
-
-            {/* Cascade Summary Details */}
-            <CascadeSummary
-              cascade={simulationResult.cascade}
-              selectedDrug={selectedDrug}
-              simDay={currentSimDay}
-              onSelectFacility={handleSelectFacility}
-            />
-          </section>
-        )}
-
-        {/* SECTION 4: Inventory Depletion & Stockout Horizon Forecasting */}
-        {shouldShowSection("trajectory") && (
-          <section id="section-trajectory" className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-white">
-                  <TrendingDown className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <h2 className="text-base lg:text-lg font-bold text-white tracking-tight font-mono">
-                    4. Inventory Depletion Trajectory & Replenishment Horizon
-                  </h2>
-                  <p className="text-xs text-neutral-400 font-mono">
-                    Daily stock curve, safety reserve boundary, and projected zero-stockout crossing point
-                  </p>
-                </div>
-              </div>
-              <div className="text-xs font-mono text-neutral-400 bg-[#0a0a0a] border border-[#222222] px-3 py-1.5 rounded-lg">
-                Target: <span className="text-white font-semibold">{currentSelectedState?.facility.name || "Selected Facility"}</span>
-              </div>
-            </div>
-
-            {/* Interactive Trajectory Chart */}
-            <StockTrajectoryChart
-              selectedState={currentSelectedState}
-              selectedDrug={selectedDrug}
-              horizonDays={horizonDays}
-              simDay={currentSimDay}
-              onSelectSimDay={setCurrentSimDay}
-            />
-          </section>
-        )}
-
-        {/* SECTION 5: Early Warning Risk Alerts & Facility Operational Audit */}
-        {shouldShowSection("alerts-inspector") && (
-          <section id="section-alerts-inspector" className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-white">
-                  <ShieldAlert className="w-4 h-4 text-rose-500" />
-                </div>
-                <div>
-                  <h2 className="text-base lg:text-lg font-bold text-white tracking-tight font-mono">
-                    5. Early Warning Risk Alerts & Operational Facility Audit
-                  </h2>
-                  <p className="text-xs text-neutral-400 font-mono">
-                    Ranked priority intervention feed paired with comprehensive facility diagnostic inspector
-                  </p>
-                </div>
-              </div>
-              <div className="text-xs font-mono text-neutral-400 bg-[#0a0a0a] border border-[#222222] px-3 py-1.5 rounded-lg">
-                Auditing: <span className="text-white font-semibold">{currentSelectedState?.facility.name || "None"}</span>
-              </div>
-            </div>
-
-            {/* 2-Column Grid: Alerts on Left, Facility Audit on Right */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Ranked Risk Alerts (5 cols) */}
-              <div className="lg:col-span-6 h-[500px]">
-                <RiskAlertPanel
-                  facilityStates={simulationResult.facilityStateList}
-                  selectedDrug={selectedDrug}
-                  selectedFacilityId={selectedFacilityId}
-                  onSelectFacility={handleSelectFacility}
-                />
-              </div>
-
-              {/* Facility Details Deep Dive (7 cols) */}
-              <div className="lg:col-span-6">
-                <FacilityDetails
-                  selectedState={currentSelectedState}
-                  selectedDrug={selectedDrug}
-                  simDay={currentSimDay}
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
+          </div>
+        </div>
       </main>
     </div>
   );
