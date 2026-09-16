@@ -4,6 +4,7 @@ import React from "react";
 import { FacilitySimulationState } from "@/lib/simulation";
 import { Drug } from "@/lib/db/schema";
 import { Building2, Pill, Flame, AlertTriangle, CheckCircle, HelpCircle, XCircle, Truck, Users, Bed } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
 
 interface FacilityDetailsProps {
   selectedState: FacilitySimulationState | null;
@@ -115,7 +116,7 @@ export function FacilityDetails({ selectedState, selectedDrug, simDay }: Facilit
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
             <span className="text-neutral-400 text-xs uppercase block font-semibold">Current Stock</span>
             <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-2xl font-bold text-white">{currentStockAtDay.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-white">{formatNumber(currentStockAtDay)}</span>
               <span className="text-xs text-neutral-400">{selectedDrug?.unit}</span>
             </div>
             <span className="text-[11px] text-neutral-500 block">
@@ -225,7 +226,7 @@ export function FacilityDetails({ selectedState, selectedDrug, simDay }: Facilit
             </span>
             <span className="flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-neutral-500" />
-              Catchment Population: {facility.catchmentPopulation.toLocaleString()} citizens
+              Catchment Population: {formatNumber(facility.catchmentPopulation)} citizens
             </span>
           </div>
         </div>

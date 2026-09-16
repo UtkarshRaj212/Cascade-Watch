@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { FacilitySimulationState } from "@/lib/simulation";
 import { Drug } from "@/lib/db/schema";
 import { TrendingDown, Calendar, Package, AlertCircle } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
 
 interface StockTrajectoryChartProps {
   selectedState: FacilitySimulationState | null;
@@ -163,7 +164,7 @@ export function StockTrajectoryChart({
                   fontFamily="monospace"
                   textAnchor="end"
                 >
-                  {val.toLocaleString()}
+                  {formatNumber(val)}
                 </text>
               </g>
             );

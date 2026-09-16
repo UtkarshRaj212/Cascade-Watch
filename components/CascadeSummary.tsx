@@ -3,7 +3,7 @@
 import React from "react";
 import { CascadeDetails } from "@/lib/simulation";
 import { Drug } from "@/lib/db/schema";
-import { Waves, ArrowRight, Layers, ShieldAlert, AlertTriangle } from "lucide-react";
+import { Waves, ArrowRight, Layers } from "lucide-react";
 
 interface CascadeSummaryProps {
   cascade: CascadeDetails;
@@ -33,22 +33,22 @@ export function CascadeSummary({
   return (
     <div className="flex flex-col bg-black border border-[#222222] rounded-xl overflow-hidden font-mono shadow-sm">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-[#222222] bg-[#0a0a0a]">
+      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-[#222222] bg-[#0a0a0a] gap-3">
         <div className="flex items-center gap-3">
-          <Waves className="w-5 h-5 text-neutral-300" />
+          <Waves className="w-5 h-5 text-neutral-300 shrink-0" />
           <div>
-            <span className="font-semibold text-white text-sm uppercase tracking-wider block">
-              Cascade Ripple & Referral Spillover Analysis
+            <span className="font-semibold text-white text-sm uppercase tracking-wider block whitespace-nowrap">
+              Cascade Ripple &amp; Referral Spillover Analysis
             </span>
             <span className="text-xs text-neutral-400 font-mono">
-              Inter-facility patient deflection & downstream depletion metrics
+              Inter-facility patient deflection &amp; downstream depletion metrics
             </span>
           </div>
         </div>
 
         <div>
           <span
-            className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${
+            className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border whitespace-nowrap shrink-0 ${
               isCascadeTriggered
                 ? "bg-rose-950/70 text-rose-300 border-rose-700/80 shadow-sm"
                 : "bg-[#141414] text-neutral-400 border-[#2b2b2b]"
@@ -63,49 +63,49 @@ export function CascadeSummary({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 p-5 border-b border-[#1f1f1f] bg-[#050505]">
         {/* 1. Primary Facility */}
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-neutral-400 text-xs uppercase block font-semibold">Primary Epicenter</span>
+          <span className="text-neutral-400 text-xs uppercase block font-semibold whitespace-nowrap">Primary Epicenter</span>
           <div className="my-2">
             <span className="font-bold text-white text-sm block truncate">
               {primaryFacility?.name || "None Identified"}
             </span>
-            <span className="text-xs text-neutral-400 block mt-0.5">
+            <span className="text-xs text-neutral-400 block mt-0.5 truncate">
               {primaryFacility ? `${primaryFacility.tier} &bull; ${primaryFacility.district}` : "No hub selected"}
             </span>
           </div>
-          <span className="text-xs text-rose-400 font-medium block">
+          <span className="text-xs text-rose-400 font-medium block whitespace-nowrap">
             {primaryStockoutDay !== null ? `Stockout Day T+${primaryStockoutDay}` : "Buffer Stable"}
           </span>
         </div>
 
         {/* 2. Secondary Facilities Affected */}
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-neutral-400 text-xs uppercase block font-semibold">Secondary Facilities</span>
-          <div className="my-2 flex items-baseline gap-1.5">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold whitespace-nowrap">Secondary Facilities</span>
+          <div className="my-2 flex items-baseline gap-1.5 flex-wrap">
             <span className="text-2xl lg:text-3xl font-bold font-mono text-amber-400">
               {secondaryFacilitiesAffected.length}
             </span>
-            <span className="text-xs text-neutral-400">centers</span>
+            <span className="text-xs text-neutral-400 whitespace-nowrap">centers</span>
           </div>
-          <span className="text-xs text-neutral-500 block">Direct referral recipients</span>
+          <span className="text-xs text-neutral-500 block whitespace-nowrap">Direct referral recipients</span>
         </div>
 
         {/* 3. Diverted Demand */}
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-neutral-400 text-xs uppercase block font-semibold">Diverted Demand Rate</span>
-          <div className="my-2 flex items-baseline gap-1.5">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold whitespace-nowrap">Diverted Demand Rate</span>
+          <div className="my-2 flex items-baseline gap-1.5 flex-wrap">
             <span className="text-2xl lg:text-3xl font-bold font-mono text-orange-400">
               +{divertedDemandRate}
             </span>
-            <span className="text-xs text-neutral-400">{selectedDrug?.unit}/day</span>
+            <span className="text-xs text-neutral-400 whitespace-nowrap">{selectedDrug?.unit}/day</span>
           </div>
-          <span className="text-xs text-neutral-500 block">
+          <span className="text-xs text-neutral-500 block truncate">
             {totalDivertedUnits > 0 ? `${totalDivertedUnits} cumulative units redirected` : "Awaiting stockout threshold"}
           </span>
         </div>
 
         {/* 4. Cascade Wave Reached */}
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-neutral-400 text-xs uppercase block font-semibold">Cascade Wave Reached</span>
+          <span className="text-neutral-400 text-xs uppercase block font-semibold whitespace-nowrap">Cascade Wave Reached</span>
           <div className="my-2 flex items-center gap-2">
             <Layers className="w-4 h-4 text-neutral-300 shrink-0" />
             <span className="font-bold text-white text-sm block truncate">
@@ -119,14 +119,14 @@ export function CascadeSummary({
 
         {/* 5. Expected Additional Stockouts */}
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-neutral-400 text-xs uppercase block font-semibold">Additional Stockouts</span>
-          <div className="my-2 flex items-baseline gap-1.5">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold whitespace-nowrap">Additional Stockouts</span>
+          <div className="my-2 flex items-baseline gap-1.5 flex-wrap">
             <span className={`text-2xl lg:text-3xl font-bold font-mono ${expectedAdditionalStockouts > 0 ? "text-rose-400" : "text-emerald-400"}`}>
               {expectedAdditionalStockouts}
             </span>
-            <span className="text-xs text-neutral-400">secondary sites</span>
+            <span className="text-xs text-neutral-400 whitespace-nowrap">secondary sites</span>
           </div>
-          <span className="text-xs text-neutral-500 block">
+          <span className="text-xs text-neutral-500 block whitespace-nowrap">
             Accelerated ripple depletion
           </span>
         </div>
@@ -165,10 +165,10 @@ export function CascadeSummary({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-xs text-amber-400 font-bold block">
+                  <span className="text-xs text-amber-400 font-bold block whitespace-nowrap">
                     Absorption Node
                   </span>
-                  <span className="text-xs text-neutral-400 flex items-center justify-end group-hover:text-white mt-0.5">
+                  <span className="text-xs text-neutral-400 flex items-center justify-end group-hover:text-white mt-0.5 whitespace-nowrap">
                     Inspect <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </span>
                 </div>
