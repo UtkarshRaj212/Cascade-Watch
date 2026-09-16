@@ -1,84 +1,110 @@
 "use client";
 
 import React from "react";
-import { Menu, RefreshCw, Calendar, MapPin, Pill, SlidersHorizontal } from "lucide-react";
-import { Drug } from "@/lib/db/schema";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Menu,
+  RefreshCw,
+  Calendar,
+  MapPin,
+  Pill,
+  Network,
+  Waves,
+  TrendingDown,
+  ShieldAlert,
+  Building2,
+  ChevronRight,
+} from "lucide-react";
+import { useDashboard } from "./DashboardContext";
 
-interface DashboardHeaderProps {
-  districts: string[];
-  selectedDistrict: string;
-  onSelectDistrict: (district: string) => void;
-  drugs: Drug[];
-  selectedDrugId: string;
-  onSelectDrug: (drugId: string) => void;
-  horizonDays: number;
-  onChangeHorizon: (horizon: number) => void;
-  onRunAnalysis: () => void;
-  isAnalyzing: boolean;
-  lastAnalysisTimestamp: string;
-  onOpenSideNav: () => void;
-}
+export function DashboardHeader() {
+  const pathname = usePathname();
+  const {
+    districts,
+    selectedDistrict,
+    setSelectedDistrict,
+    drugs,
+    selectedDrugId,
+    setSelectedDrugId,
+    horizonDays,
+    setHorizonDays,
+    runAnalysis,
+    isAnalyzing,
+    toggleSideNav,
+  } = useDashboard();
 
-export function DashboardHeader({
-  districts,
-  selectedDistrict,
-  onSelectDistrict,
-  drugs,
-  selectedDrugId,
-  onSelectDrug,
-  horizonDays,
-  onChangeHorizon,
-  onRunAnalysis,
-  isAnalyzing,
-  lastAnalysisTimestamp,
-  onOpenSideNav,
-}: DashboardHeaderProps) {
+  const getPageTitle = () => {
+    switch (pathname) {
+      case "/cascade":
+        return { label: "Cascade & Spillover Intel", icon: Waves, color: "text-rose-400" };
+      case "/trajectory":
+        return { label: "Stock Trajectory & Depletion", icon: TrendingDown, color: "text-sky-400" };
+      case "/alerts":
+        return { label: "Ranked Risk Alerts", icon: ShieldAlert, color: "text-rose-500" };
+      case "/facilities":
+        return { label: "Facility Diagnostic Audit", icon: Building2, color: "text-amber-400" };
+      default:
+        return { label: "Network & Referral Map", icon: Network, color: "text-emerald-400" };
+    }
+  };
+
+  const pageInfo = getPageTitle();
+  const PageIcon = pageInfo.icon;
+
   return (
-    <header className="border-b border-[#222222] bg-black/95 backdrop-blur-md px-6 py-3.5 sticky top-0 z-40">
-      <div className="max-w-[1750px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-        {/* Left: Hamburger Button + Clean Branding */}
-        <div className="flex items-center gap-4 shrink-0">
+    <header className="border-b border-[#222222] bg-black/95 backdrop-blur-md px-4 sm:px-6 py-3 sticky top-0 z-40 shrink-0">
+      <div className="max-w-[1750px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 sm:gap-4">
+        {/* Left: Hamburger Button + Branding + Breadcrumb */}
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <button
             id="hamburger-menu-btn"
-            onClick={onOpenSideNav}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0e0e0e] border border-[#262626] hover:border-[#404040] hover:bg-[#161616] text-neutral-200 hover:text-white transition-all shadow-sm shrink-0 group"
-            title="Open Deep-Dive Side Panel"
-            aria-label="Toggle Side Panel"
+            onClick={toggleSideNav}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0e0e0e] border border-[#262626] hover:border-[#444444] hover:bg-[#161616] text-neutral-200 hover:text-white transition-all shadow-sm shrink-0 group"
+            title="Open Navigation Menu"
+            aria-label="Toggle Side Menu"
           >
             <Menu className="w-5 h-5 text-neutral-300 group-hover:text-white" />
             <span className="text-xs font-mono font-medium hidden sm:inline text-neutral-300 group-hover:text-white">
-              Deep-Dive Panel
+              Navigation
             </span>
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm shadow-sm shrink-0 select-none">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm shadow-sm shrink-0 select-none group-hover:bg-neutral-200 transition-colors">
               ▲
             </div>
             <div className="min-w-0">
-              <span className="font-bold text-lg tracking-tight text-white font-mono block leading-none">
+              <span className="font-bold text-base tracking-tight text-white font-mono block leading-none">
                 CascadeWatch
               </span>
-              {/* <p className="text-xs text-neutral-400 mt-1 whitespace-nowrap">
-                Predictive Medicine Stockout &amp; Referral Ripple Intelligence
-              </p> */}
+            </div>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-2 pl-3 border-l border-[#222222]">
+            <ChevronRight className="w-4 h-4 text-neutral-600" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0f0f0f] border border-[#222222]">
+              <PageIcon className={`w-3.5 h-3.5 ${pageInfo.color}`} />
+              <span className="text-xs font-mono font-medium text-neutral-200">
+                {pageInfo.label}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Right: Operational Controls with no text wrapping */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Right: Operational Controls with shared context */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* District Selector */}
-          <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-3 py-2 text-xs whitespace-nowrap shrink-0">
-            <MapPin className="w-4 h-4 text-neutral-400 shrink-0" />
-            <label htmlFor="district-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
+            <label htmlFor="district-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">
               District:
             </label>
             <select
               id="district-select"
               aria-label="Filter by district"
               value={selectedDistrict}
-              onChange={(e) => onSelectDistrict(e.target.value)}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
               className="bg-transparent text-neutral-100 font-semibold focus:outline-none cursor-pointer text-xs pr-1"
             >
               <option value="all" className="bg-[#0a0a0a] text-neutral-200">All Districts</option>
@@ -91,17 +117,17 @@ export function DashboardHeader({
           </div>
 
           {/* Drug Selector */}
-          <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-3 py-2 text-xs whitespace-nowrap shrink-0">
-            <Pill className="w-4 h-4 text-neutral-400 shrink-0" />
-            <label htmlFor="drug-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+            <Pill className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
+            <label htmlFor="drug-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">
               Drug:
             </label>
             <select
               id="drug-select"
               aria-label="Select target drug"
               value={selectedDrugId}
-              onChange={(e) => onSelectDrug(e.target.value)}
-              className="bg-transparent text-neutral-100 font-semibold focus:outline-none cursor-pointer text-xs pr-1 max-w-[200px] truncate"
+              onChange={(e) => setSelectedDrugId(e.target.value)}
+              className="bg-transparent text-neutral-100 font-semibold focus:outline-none cursor-pointer text-xs pr-1 max-w-[140px] sm:max-w-[190px] truncate"
             >
               {drugs.map((med) => (
                 <option key={med.id} value={med.id} className="bg-[#0a0a0a] text-neutral-200">
@@ -112,9 +138,9 @@ export function DashboardHeader({
           </div>
 
           {/* Horizon Selector */}
-          <div className="flex items-center gap-2.5 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-3 py-2 text-xs whitespace-nowrap shrink-0">
-            <Calendar className="w-4 h-4 text-neutral-400 shrink-0" />
-            <span className="text-neutral-400 text-xs font-medium uppercase tracking-wider">Horizon:</span>
+          <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
+            <span className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">Horizon:</span>
             <div className="flex items-center gap-2">
               <input
                 id="horizon-slider"
@@ -123,11 +149,11 @@ export function DashboardHeader({
                 max="45"
                 step="1"
                 value={horizonDays}
-                onChange={(e) => onChangeHorizon(parseInt(e.target.value, 10))}
-                className="w-20 accent-white cursor-pointer h-2 bg-[#222222] rounded-lg appearance-none"
+                onChange={(e) => setHorizonDays(parseInt(e.target.value, 10))}
+                className="w-16 sm:w-20 accent-white cursor-pointer h-2 bg-[#222222] rounded-lg appearance-none"
                 aria-label="Analysis Horizon Slider"
               />
-              <span className="font-mono font-bold text-white text-xs min-w-[30px] text-right">
+              <span className="font-mono font-bold text-white text-xs min-w-[26px] sm:min-w-[30px] text-right">
                 {horizonDays}d
               </span>
             </div>
@@ -136,12 +162,13 @@ export function DashboardHeader({
           {/* Run Analysis Button */}
           <button
             id="run-analysis-btn"
-            onClick={onRunAnalysis}
+            onClick={runAnalysis}
             disabled={isAnalyzing}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${isAnalyzing
+            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${
+              isAnalyzing
                 ? "bg-[#1f1f1f] text-neutral-400 border border-[#333333] cursor-wait"
                 : "bg-white text-black hover:bg-neutral-200 active:scale-[0.98]"
-              }`}
+            }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? "animate-spin text-neutral-400" : "text-black"}`} />
             <span>{isAnalyzing ? "Computing..." : "Run Analysis"}</span>

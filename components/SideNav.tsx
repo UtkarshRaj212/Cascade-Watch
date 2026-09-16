@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Activity,
   X,
@@ -12,96 +14,96 @@ import {
   Building2,
   Database,
   Calendar,
-  Layers,
   ChevronRight,
   ExternalLink,
+  MapPin,
+  Pill,
 } from "lucide-react";
+import { useDashboard } from "./DashboardContext";
 
-export type DashboardSection = "all" | "overview" | "network-map" | "cascade-intel" | "trajectory" | "alerts-inspector";
+export function SideNav() {
+  const pathname = usePathname();
+  const {
+    isSideNavOpen,
+    setIsSideNavOpen,
+    selectedDistrict,
+    selectedDrug,
+    horizonDays,
+    facilities,
+    simulationResult,
+  } = useDashboard();
 
-interface SideNavProps {
-  isOpen: boolean;
-  onClose: () => void;
-  activeSection: DashboardSection;
-  onSelectSection: (section: DashboardSection) => void;
-  selectedDistrict: string;
-  selectedDrugName: string;
-  horizonDays: number;
-  totalFacilitiesCount: number;
-  criticalCount: number;
-}
+  const criticalCount = simulationResult.kpis.criticalFacilities;
+  const atRiskCount = simulationResult.kpis.facilitiesAtRisk;
 
-export function SideNav({
-  isOpen,
-  onClose,
-  activeSection,
-  onSelectSection,
-  selectedDistrict,
-  selectedDrugName,
-  horizonDays,
-  totalFacilitiesCount,
-  criticalCount,
-}: SideNavProps) {
-  const navItems = [
+  const navLinks = [
     {
-      id: "all" as DashboardSection,
-      label: "Complete Dashboard",
-      description: "Full unified command view",
-      icon: LayoutDashboard,
-    },
-    {
-      id: "overview" as DashboardSection,
-      label: "1. Macro Overview & KPIs",
-      description: "Executive district summary metrics",
-      icon: Activity,
-    },
-    {
-      id: "network-map" as DashboardSection,
-      label: "2. Network & Referral Map",
-      description: "Spatial nodes & transfer pathways",
+      href: "/",
+      label: "Network & Referral Map",
+      badge: "Command Center",
+      description: "Spatial nodes, referral pathways & district KPIs",
       icon: Network,
+      color: "text-emerald-400",
     },
     {
-      id: "cascade-intel" as DashboardSection,
-      label: "3. Cascade & Spillover Intel",
-      description: "Day-by-day ripple simulation",
+      href: "/cascade",
+      label: "Cascade & Spillover Intel",
+      badge: simulationResult.cascade.primaryStockoutDay !== null ? `Stockout Day ${simulationResult.cascade.primaryStockoutDay}` : "Simulation",
+      badgeColor: "bg-rose-950/80 text-rose-300 border-rose-800/60",
+      description: "Day-by-day ripple simulation & patient deflection",
       icon: Waves,
+      color: "text-rose-400",
     },
     {
-      id: "trajectory" as DashboardSection,
-      label: "4. Inventory Trajectory",
-      description: "Stock depletion & delivery milestones",
+      href: "/trajectory",
+      label: "Stock Trajectory",
+      badge: `${horizonDays}d Horizon`,
+      badgeColor: "bg-sky-950/80 text-sky-300 border-sky-800/60",
+      description: "Inventory depletion curves & delivery milestones",
       icon: TrendingDown,
+      color: "text-sky-400",
     },
     {
-      id: "alerts-inspector" as DashboardSection,
-      label: "5. Risk Alerts & Deep Dive",
-      description: "Ranked priorities & diagnostic audit",
+      href: "/alerts",
+      label: "Risk Alerts & Priorities",
+      badge: criticalCount > 0 ? `${criticalCount} Critical` : `${atRiskCount} At Risk`,
+      badgeColor: criticalCount > 0 ? "bg-rose-900/60 text-rose-300 border-rose-700/60" : "bg-amber-900/60 text-amber-300 border-amber-700/60",
+      description: "Ranked facility risk alerts & diagnostic audit",
       icon: ShieldAlert,
+      color: "text-rose-500",
+    },
+    {
+      href: "/facilities",
+      label: "Facility Diagnostic Audit",
+      badge: `${facilities.length} Facilities`,
+      badgeColor: "bg-neutral-900 text-neutral-300 border-neutral-700",
+      description: "Single-facility operational deep dive & buffer stock",
+      icon: Building2,
+      color: "text-amber-400",
     },
   ];
 
   return (
     <>
       {/* Backdrop overlay */}
-      {isOpen && (
+      {isSideNavOpen && (
         <div
-          onClick={onClose}
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 transition-opacity duration-200"
-          aria-label="Close sidebar backdrop"
+          onClick={() => setIsSideNavOpen(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 transition-opacity duration-200"
+          aria-label="Close navigation sidebar"
         />
       )}
 
-      {/* Drawer */}
+      {/* Navigation Drawer */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-[#050505] border-r border-[#222222] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] bg-[#070707] border-r border-[#222222] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${
+          isSideNavOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Drawer Header */}
         <div className="p-5 border-b border-[#222222] flex items-center justify-between bg-black">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm shadow-sm">
               ▲
             </div>
             <div>
@@ -115,91 +117,114 @@ export function SideNav({
           </div>
 
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-[#1f1f1f] transition-colors"
+            onClick={() => setIsSideNavOpen(false)}
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-[#1a1a1a] transition-colors border border-transparent hover:border-[#333333]"
             aria-label="Close Sidebar"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Operational Context Card */}
-        <div className="p-4 border-b border-[#1a1a1a] bg-[#0a0a0a]">
-          <span className="text-[11px] uppercase tracking-wider text-neutral-500 font-mono font-semibold block mb-2">
+        {/* Operational Context Summary Bar */}
+        <div className="p-4 border-b border-[#181818] bg-[#0c0c0c]/80">
+          <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono font-bold block mb-2">
             Active Parameters
           </span>
           <div className="space-y-1.5 text-xs font-mono text-neutral-300">
             <div className="flex justify-between items-center">
-              <span className="text-neutral-500">District:</span>
-              <span className="font-medium text-white">{selectedDistrict === "all" ? "All Districts" : `${selectedDistrict} District`}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-500">Drug:</span>
-              <span className="font-medium text-white truncate max-w-[150px]">{selectedDrugName}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-500">Window:</span>
-              <span className="font-medium text-white">{horizonDays} Days</span>
-            </div>
-            <div className="flex justify-between items-center pt-1 border-t border-[#1a1a1a]">
-              <span className="text-neutral-500">Facilities Monitored:</span>
-              <span className="font-semibold text-white">{totalFacilitiesCount} centers</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-500">Critical Status:</span>
-              <span className={`font-semibold ${criticalCount > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                {criticalCount} Critical
+              <span className="text-neutral-400 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                District:
               </span>
+              <span className="font-semibold text-white">
+                {selectedDistrict === "all" ? "All Districts" : `${selectedDistrict} District`}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-neutral-400 flex items-center gap-1.5">
+                <Pill className="w-3.5 h-3.5 text-neutral-400" />
+                Drug:
+              </span>
+              <span className="font-semibold text-white truncate max-w-[140px]">
+                {selectedDrug?.name || "Medicine"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-neutral-400 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+                Horizon:
+              </span>
+              <span className="font-semibold text-white">{horizonDays} Days</span>
             </div>
           </div>
         </div>
 
-        {/* Section Navigation List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
-          <div className="px-3 pt-2 pb-1 text-[11px] font-mono uppercase tracking-wider text-neutral-500">
-            Dashboard Sections
+        {/* Section Navigation Links */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+          <div className="px-3 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
+            Data &amp; Intelligence Pages
           </div>
 
-          {navItems.map((item) => {
+          {navLinks.map((item) => {
             const Icon = item.icon;
-            const isActive = activeSection === item.id;
+            const isActive = pathname === item.href;
 
             return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onSelectSection(item.id);
-                  onClose();
-                }}
-                className={`w-full text-left p-3 rounded-lg flex items-start gap-3 transition-all ${
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsSideNavOpen(false)}
+                className={`group w-full block p-3 rounded-lg border transition-all ${
                   isActive
-                    ? "bg-[#171717] text-white border border-[#333333] shadow-sm"
-                    : "text-neutral-400 hover:text-white hover:bg-[#0e0e0e] border border-transparent"
+                    ? "bg-[#181818] text-white border-[#383838] shadow-md ring-1 ring-white/10"
+                    : "text-neutral-400 hover:text-white hover:bg-[#111111] border-transparent hover:border-[#222222]"
                 }`}
               >
-                <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isActive ? "text-white" : "text-neutral-500"}`} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold font-mono flex items-center justify-between">
-                    <span className={isActive ? "text-white" : "text-neutral-200"}>{item.label}</span>
-                    {isActive && <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />}
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-md ${isActive ? "bg-black text-white" : "bg-[#141414] text-neutral-400 group-hover:text-white"}`}>
+                    <Icon className={`w-4 h-4 ${isActive ? item.color : "text-neutral-400 group-hover:text-white"}`} />
                   </div>
-                  <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
-                    {item.description}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className={`text-xs font-semibold font-mono ${isActive ? "text-white" : "text-neutral-200 group-hover:text-white"}`}>
+                        {item.label}
+                      </span>
+                      <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive ? "text-white translate-x-0.5" : "text-neutral-600 group-hover:text-neutral-400"}`} />
+                    </div>
+
+                    <p className="text-[11px] text-neutral-400 mt-1 leading-snug">
+                      {item.description}
+                    </p>
+
+                    {item.badge && (
+                      <div className="mt-2">
+                        <span className={`inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded border ${
+                          item.badgeColor || "bg-[#161616] text-neutral-300 border-[#2b2b2b]"
+                        }`}>
+                          {item.badge}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </button>
+              </Link>
             );
           })}
         </div>
 
         {/* System & Architecture Footer */}
         <div className="p-4 border-t border-[#1f1f1f] bg-black text-[11px] font-mono space-y-2">
-          <div className="flex items-center gap-2 text-neutral-400">
-            <Database className="w-3.5 h-3.5 text-emerald-400" />
-            <span>PostgreSQL &bull; Drizzle ORM</span>
+          <div className="flex items-center justify-between text-neutral-400">
+            <div className="flex items-center gap-2">
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span>PostgreSQL &bull; Drizzle ORM</span>
+            </div>
+            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">
+              LIVE
+            </span>
           </div>
-          <p className="text-[10px] text-neutral-500 leading-relaxed">
-            Deterministic supply-chain network flow simulation for hospital referral cascades.
+          <p className="text-[10px] text-neutral-400 leading-relaxed">
+            Healthcare referral network flow simulator for proactive stockout mitigation.
           </p>
         </div>
       </aside>
