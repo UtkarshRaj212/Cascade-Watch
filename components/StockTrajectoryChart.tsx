@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { FacilitySimulationState } from "@/lib/simulation";
 import { Drug } from "@/lib/db/schema";
-import { TrendingDown, Calendar, Package, AlertCircle, ArrowDown } from "lucide-react";
+import { TrendingDown, Calendar, Package, AlertCircle } from "lucide-react";
 
 interface StockTrajectoryChartProps {
   selectedState: FacilitySimulationState | null;
@@ -24,24 +24,22 @@ export function StockTrajectoryChart({
 
   if (!selectedState || selectedState.trajectory.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-slate-950 border border-slate-800 rounded h-64 text-slate-500 font-mono text-xs">
-        <TrendingDown className="w-8 h-8 mb-2 text-slate-600" />
-        <span>Select a facility to view inventory trajectory</span>
+      <div className="flex flex-col items-center justify-center p-12 bg-black border border-[#222222] rounded-xl h-72 text-neutral-500 font-mono text-xs shadow-sm">
+        <TrendingDown className="w-10 h-10 mb-3 text-neutral-600" />
+        <span className="text-sm">Select a facility to inspect simulated inventory trajectory</span>
       </div>
     );
   }
 
   const { facility, inventory, trajectory, stockoutDay } = selectedState;
 
-  // Compute SVG chart coordinates
-  const chartWidth = 700;
-  const chartHeight = 260;
-  const padding = { top: 30, right: 35, bottom: 40, left: 60 };
+  const chartWidth = 850;
+  const chartHeight = 290;
+  const padding = { top: 35, right: 40, bottom: 45, left: 70 };
 
   const plotWidth = chartWidth - padding.left - padding.right;
   const plotHeight = chartHeight - padding.top - padding.bottom;
 
-  // Max stock for scaling Y-axis
   const maxStock = useMemo(() => {
     let max = Math.max(
       inventory.currentStock + inventory.pipelineUnits,
@@ -54,11 +52,9 @@ export function StockTrajectoryChart({
     return Math.ceil(max * 1.15);
   }, [inventory, trajectory]);
 
-  // Scales
   const getX = (day: number) => padding.left + (day / horizonDays) * plotWidth;
   const getY = (stock: number) => padding.top + plotHeight - (Math.max(0, stock) / maxStock) * plotHeight;
 
-  // SVG path for stock trajectory
   const pathD = useMemo(() => {
     return trajectory
       .filter((pt) => pt.day <= horizonDays)
@@ -66,7 +62,6 @@ export function StockTrajectoryChart({
       .join(" ");
   }, [trajectory, horizonDays, maxStock]);
 
-  // Area under path
   const areaD = useMemo(() => {
     const pts = trajectory.filter((pt) => pt.day <= horizonDays);
     if (pts.length === 0) return "";
@@ -76,10 +71,8 @@ export function StockTrajectoryChart({
     return `${pathD} L ${lastX} ${zeroY} L ${firstX} ${zeroY} Z`;
   }, [pathD, trajectory, horizonDays, maxStock]);
 
-  // Y-axis ticks
   const yTicks = [0, Math.round(maxStock * 0.33), Math.round(maxStock * 0.66), maxStock];
 
-  // X-axis ticks (step every 5 or 7 days)
   const xStep = horizonDays <= 14 ? 2 : horizonDays <= 28 ? 5 : 7;
   const xTicks: number[] = [];
   for (let d = 0; d <= horizonDays; d += xStep) {
@@ -89,38 +82,42 @@ export function StockTrajectoryChart({
     xTicks.push(horizonDays);
   }
 
-  // Hovered day data
   const activeDay = hoveredDay !== null ? hoveredDay : simDay;
   const activePoint = trajectory[Math.min(activeDay, trajectory.length - 1)];
 
   return (
-    <div className="flex flex-col bg-slate-950 border border-slate-800 rounded overflow-hidden font-mono text-xs">
+    <div className="flex flex-col bg-black border border-[#222222] rounded-xl overflow-hidden font-mono shadow-sm">
       {/* Chart Header */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800 bg-slate-900/90">
-        <div className="flex items-center gap-2">
-          <TrendingDown className="w-4 h-4 text-sky-400" />
-          <span className="font-semibold text-slate-200 uppercase tracking-wider">
-            Inventory Trajectory & Stockout Forecast
-          </span>
+      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-[#222222] bg-[#0a0a0a]">
+        <div className="flex items-center gap-3">
+          <TrendingDown className="w-5 h-5 text-neutral-300" />
+          <div>
+            <span className="font-semibold text-white text-sm uppercase tracking-wider block">
+              Inventory Depletion Trajectory & Replenishment Horizon
+            </span>
+            <span className="text-xs text-neutral-400 font-mono">
+              Auditing {facility.name} &bull; Formulation: {selectedDrug?.name || "Selected Formulation"}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-slate-400">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-300">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-sky-400 inline-block"></span> Projected Stock
+            <span className="w-3 h-0.5 bg-white inline-block"></span> Projected Stock Balance
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 border-b border-amber-400 border-dashed inline-block"></span> Safety Threshold
+            <span className="w-3 h-0.5 border-b border-amber-400 border-dashed inline-block"></span> Safety Threshold
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-rose-500 inline-block"></span> Zero Stockout Point
+            <span className="w-3 h-0.5 bg-rose-500 inline-block"></span> Zero Stockout Level
           </span>
         </div>
       </div>
 
       {/* SVG Canvas */}
-      <div className="relative p-2 bg-slate-950 flex justify-center">
+      <div className="relative p-3 bg-black flex justify-center">
         <svg
-          className="w-full max-w-[850px] select-none"
+          className="w-full max-w-[950px] select-none"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           preserveAspectRatio="xMidYMid meet"
           onMouseLeave={() => setHoveredDay(null)}
@@ -138,10 +135,9 @@ export function StockTrajectoryChart({
           }}
         >
           <defs>
-            {/* Area Gradient */}
-            <linearGradient id="stockAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
-              <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.05" />
+            <linearGradient id="stockAreaGradVercel" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.28" />
+              <stop offset="60%" stopColor="#ffffff" stopOpacity="0.05" />
               <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.2" />
             </linearGradient>
           </defs>
@@ -156,14 +152,14 @@ export function StockTrajectoryChart({
                   y1={y}
                   x2={chartWidth - padding.right}
                   y2={y}
-                  stroke="#1e293b"
+                  stroke="#171717"
                   strokeDasharray="2 2"
                 />
                 <text
-                  x={padding.left - 8}
-                  y={y + 3.5}
-                  fill="#64748b"
-                  fontSize="10"
+                  x={padding.left - 10}
+                  y={y + 4}
+                  fill="#737373"
+                  fontSize="11"
                   fontFamily="monospace"
                   textAnchor="end"
                 >
@@ -183,14 +179,14 @@ export function StockTrajectoryChart({
                   y1={padding.top}
                   x2={x}
                   y2={chartHeight - padding.bottom}
-                  stroke="#1e293b"
+                  stroke="#171717"
                   strokeDasharray="2 2"
                 />
                 <text
                   x={x}
-                  y={chartHeight - padding.bottom + 16}
-                  fill="#64748b"
-                  fontSize="10"
+                  y={chartHeight - padding.bottom + 18}
+                  fill="#737373"
+                  fontSize="11"
                   fontFamily="monospace"
                   textAnchor="middle"
                 >
@@ -209,16 +205,17 @@ export function StockTrajectoryChart({
                 x2={chartWidth - padding.right}
                 y2={getY(inventory.safetyStock)}
                 stroke="#f59e0b"
-                strokeWidth="1.2"
+                strokeWidth="1.4"
                 strokeDasharray="4 3"
-                strokeOpacity="0.75"
+                strokeOpacity="0.8"
               />
               <text
-                x={chartWidth - padding.right - 4}
-                y={getY(inventory.safetyStock) - 4}
+                x={chartWidth - padding.right - 6}
+                y={getY(inventory.safetyStock) - 6}
                 fill="#f59e0b"
-                fontSize="9"
+                fontSize="10"
                 fontFamily="monospace"
+                fontWeight="bold"
                 textAnchor="end"
               >
                 Safe Reserve ({inventory.safetyStock} {selectedDrug?.unit})
@@ -233,14 +230,14 @@ export function StockTrajectoryChart({
             x2={chartWidth - padding.right}
             y2={getY(0)}
             stroke="#e11d48"
-            strokeWidth="1.5"
+            strokeWidth="1.8"
           />
 
           {/* Stock Trajectory Area Fill */}
-          <path d={areaD} fill="url(#stockAreaGrad)" />
+          <path d={areaD} fill="url(#stockAreaGradVercel)" />
 
           {/* Stock Trajectory Line */}
-          <path d={pathD} fill="none" stroke="#38bdf8" strokeWidth="2.5" />
+          <path d={pathD} fill="none" stroke="#ffffff" strokeWidth="2.5" />
 
           {/* Replenishment Event Marker */}
           {inventory.nextDeliveryDays !== null && inventory.nextDeliveryDays <= horizonDays && (
@@ -251,24 +248,24 @@ export function StockTrajectoryChart({
                 x2={getX(inventory.nextDeliveryDays)}
                 y2={chartHeight - padding.bottom}
                 stroke="#10b981"
-                strokeWidth="1.5"
+                strokeWidth="1.6"
                 strokeDasharray="4 2"
               />
               <rect
-                x={getX(inventory.nextDeliveryDays) - 45}
-                y={padding.top - 18}
-                width="90"
-                height="16"
-                rx="2"
-                fill="#064e3b"
+                x={getX(inventory.nextDeliveryDays) - 50}
+                y={padding.top - 20}
+                width="100"
+                height="18"
+                rx="3"
+                fill="#062916"
                 stroke="#10b981"
-                strokeWidth="1"
+                strokeWidth="1.2"
               />
               <text
                 x={getX(inventory.nextDeliveryDays)}
-                y={padding.top - 6}
+                y={padding.top - 7}
                 fill="#a7f3d0"
-                fontSize="9"
+                fontSize="10"
                 fontWeight="bold"
                 fontFamily="monospace"
                 textAnchor="middle"
@@ -287,25 +284,25 @@ export function StockTrajectoryChart({
                 x2={getX(stockoutDay)}
                 y2={getY(0)}
                 stroke="#f43f5e"
-                strokeWidth="1.5"
+                strokeWidth="1.6"
                 strokeDasharray="3 2"
               />
-              <circle cx={getX(stockoutDay)} cy={getY(0)} r="5" fill="#f43f5e" />
+              <circle cx={getX(stockoutDay)} cy={getY(0)} r="5.5" fill="#f43f5e" />
               <rect
-                x={Math.min(getX(stockoutDay) - 40, chartWidth - padding.right - 90)}
-                y={getY(0) - 24}
-                width="82"
-                height="18"
-                rx="2"
-                fill="#881337"
+                x={Math.min(getX(stockoutDay) - 45, chartWidth - padding.right - 95)}
+                y={getY(0) - 26}
+                width="92"
+                height="20"
+                rx="3"
+                fill="#380913"
                 stroke="#f43f5e"
-                strokeWidth="1"
+                strokeWidth="1.2"
               />
               <text
                 x={Math.min(getX(stockoutDay), chartWidth - padding.right - 49)}
-                y={getY(0) - 11}
+                y={getY(0) - 12}
                 fill="#ffffff"
-                fontSize="9"
+                fontSize="10"
                 fontWeight="bold"
                 fontFamily="monospace"
                 textAnchor="middle"
@@ -322,16 +319,16 @@ export function StockTrajectoryChart({
             x2={getX(simDay)}
             y2={chartHeight - padding.bottom}
             stroke="#ffffff"
-            strokeWidth="1.5"
-            strokeDasharray="2 2"
+            strokeWidth="1.6"
+            strokeDasharray="3 2"
           />
           <circle
             cx={getX(simDay)}
             cy={getY(trajectory[Math.min(simDay, trajectory.length - 1)]?.stock || 0)}
-            r="4.5"
+            r="5"
             fill="#ffffff"
-            stroke="#0284c7"
-            strokeWidth="2"
+            stroke="#000000"
+            strokeWidth="2.5"
           />
 
           {/* Hover Scrub Line */}
@@ -342,15 +339,15 @@ export function StockTrajectoryChart({
                 y1={padding.top}
                 x2={getX(hoveredDay)}
                 y2={chartHeight - padding.bottom}
-                stroke="#94a3b8"
-                strokeWidth="1"
-                strokeDasharray="1 1"
+                stroke="#737373"
+                strokeWidth="1.2"
+                strokeDasharray="2 2"
               />
               <circle
                 cx={getX(hoveredDay)}
                 cy={getY(trajectory[Math.min(hoveredDay, trajectory.length - 1)]?.stock || 0)}
-                r="4"
-                fill="#38bdf8"
+                r="4.5"
+                fill="#d4d4d4"
               />
             </g>
           )}
@@ -358,31 +355,31 @@ export function StockTrajectoryChart({
 
         {/* Floating Day Telemetry Box */}
         {activePoint && (
-          <div className="absolute top-4 right-6 bg-slate-900/95 border border-slate-700 rounded p-2 text-[11px] shadow-lg font-mono">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-1 mb-1 font-bold">
+          <div className="absolute top-5 right-8 bg-[#0a0a0a]/95 border border-[#333333] rounded-lg p-3 text-xs shadow-2xl font-mono min-w-[210px]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#222222] pb-1.5 mb-1.5 font-bold">
               <span className="text-white">Day T+{activeDay} Forecast</span>
               <span className={activePoint.isStockedOut ? "text-rose-400" : "text-emerald-400"}>
-                {activePoint.isStockedOut ? "ZERO INVENTORY" : "BUFFER ACTIVE"}
+                {activePoint.isStockedOut ? "ZERO STOCK" : "BUFFER ACTIVE"}
               </span>
             </div>
-            <div className="space-y-0.5 text-slate-300">
+            <div className="space-y-1 text-neutral-300">
               <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Projected Stock:</span>
+                <span className="text-neutral-500">Projected Stock:</span>
                 <span className="font-bold text-white">{activePoint.stock} {selectedDrug?.unit}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Burn Rate:</span>
+                <span className="text-neutral-500">Burn Velocity:</span>
                 <span>{activePoint.consumption} {selectedDrug?.unit}/d</span>
               </div>
               {activePoint.divertedDemand > 0 && (
                 <div className="flex justify-between gap-3 text-rose-400">
-                  <span>Cascade Inflow:</span>
+                  <span>Cascade Spillover:</span>
                   <span>+{activePoint.divertedDemand} {selectedDrug?.unit}/d</span>
                 </div>
               )}
               {activePoint.replenishmentArrival > 0 && (
                 <div className="flex justify-between gap-3 text-emerald-400">
-                  <span>Shipment Delivery:</span>
+                  <span>Shipment Arrival:</span>
                   <span>+{activePoint.replenishmentArrival} {selectedDrug?.unit}</span>
                 </div>
               )}
@@ -392,9 +389,9 @@ export function StockTrajectoryChart({
       </div>
 
       {/* Chart Footer Guidance */}
-      <div className="px-3.5 py-1.5 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-[11px] text-slate-400">
-        <span>Hover or click along trajectory to scrub simulation day</span>
-        <span className="text-slate-500">Facility: {facility.name}</span>
+      <div className="px-5 py-2 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-xs text-neutral-400">
+        <span>Click anywhere along the chart trajectory to jump the simulation day scrubber</span>
+        <span className="text-neutral-300 font-semibold">Selected Facility: {facility.name}</span>
       </div>
     </div>
   );

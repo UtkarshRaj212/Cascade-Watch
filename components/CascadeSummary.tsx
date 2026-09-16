@@ -3,7 +3,7 @@
 import React from "react";
 import { CascadeDetails } from "@/lib/simulation";
 import { Drug } from "@/lib/db/schema";
-import { Waves, ArrowRight, AlertTriangle, ShieldAlert, Zap, Layers } from "lucide-react";
+import { Waves, ArrowRight, Layers, ShieldAlert, AlertTriangle } from "lucide-react";
 
 interface CascadeSummaryProps {
   cascade: CascadeDetails;
@@ -31,135 +31,145 @@ export function CascadeSummary({
   const isCascadeTriggered = primaryStockoutDay !== null && simDay >= primaryStockoutDay;
 
   return (
-    <div className="flex flex-col bg-slate-950 border border-slate-800 rounded overflow-hidden font-mono text-xs">
+    <div className="flex flex-col bg-black border border-[#222222] rounded-xl overflow-hidden font-mono shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800 bg-slate-900/90">
-        <div className="flex items-center gap-2">
-          <Waves className="w-4 h-4 text-rose-400" />
-          <span className="font-semibold text-slate-200 uppercase tracking-wider">
-            Cascade Ripple & Referral Spillover Intelligence
-          </span>
+      <div className="flex flex-wrap items-center justify-between px-5 py-3.5 border-b border-[#222222] bg-[#0a0a0a]">
+        <div className="flex items-center gap-3">
+          <Waves className="w-5 h-5 text-neutral-300" />
+          <div>
+            <span className="font-semibold text-white text-sm uppercase tracking-wider block">
+              Cascade Ripple & Referral Spillover Analysis
+            </span>
+            <span className="text-xs text-neutral-400 font-mono">
+              Inter-facility patient deflection & downstream depletion metrics
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div>
           <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+            className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${
               isCascadeTriggered
-                ? "bg-rose-950 text-rose-300 border-rose-700"
-                : "bg-slate-800 text-slate-400 border-slate-700"
+                ? "bg-rose-950/70 text-rose-300 border-rose-700/80 shadow-sm"
+                : "bg-[#141414] text-neutral-400 border-[#2b2b2b]"
             }`}
           >
-            {isCascadeTriggered ? "CASCADE IN PROGRESS" : "CASCADE LATENT"}
+            {isCascadeTriggered ? "CASCADE IN ACTIVE DEFLECTION" : "CASCADE LATENT / PRE-DEFLECTION"}
           </span>
         </div>
       </div>
 
       {/* 5 Cascade Key Indicators */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 p-3.5 border-b border-slate-800/80 bg-slate-900/40">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 p-5 border-b border-[#1f1f1f] bg-[#050505]">
         {/* 1. Primary Facility */}
-        <div className="bg-slate-900 border border-slate-800 rounded p-2.5">
-          <span className="text-slate-400 text-[10px] uppercase block">Primary Epicenter</span>
-          <span className="font-bold text-white text-xs block truncate mt-1">
-            {primaryFacility?.name || "None Identified"}
-          </span>
-          <span className="text-[10px] text-rose-400 block mt-0.5">
-            {primaryStockoutDay !== null ? `Stockout Day ${primaryStockoutDay}` : "Buffer Stable"}
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold">Primary Epicenter</span>
+          <div className="my-2">
+            <span className="font-bold text-white text-sm block truncate">
+              {primaryFacility?.name || "None Identified"}
+            </span>
+            <span className="text-xs text-neutral-400 block mt-0.5">
+              {primaryFacility ? `${primaryFacility.tier} &bull; ${primaryFacility.district}` : "No hub selected"}
+            </span>
+          </div>
+          <span className="text-xs text-rose-400 font-medium block">
+            {primaryStockoutDay !== null ? `Stockout Day T+${primaryStockoutDay}` : "Buffer Stable"}
           </span>
         </div>
 
         {/* 2. Secondary Facilities Affected */}
-        <div className="bg-slate-900 border border-slate-800 rounded p-2.5">
-          <span className="text-slate-400 text-[10px] uppercase block">Secondary Facilities</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono text-amber-400">
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold">Secondary Facilities</span>
+          <div className="my-2 flex items-baseline gap-1.5">
+            <span className="text-2xl lg:text-3xl font-bold font-mono text-amber-400">
               {secondaryFacilitiesAffected.length}
             </span>
-            <span className="text-[10px] text-slate-400">facilities</span>
+            <span className="text-xs text-neutral-400">centers</span>
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">Direct referral recipients</span>
+          <span className="text-xs text-neutral-500 block">Direct referral recipients</span>
         </div>
 
         {/* 3. Diverted Demand */}
-        <div className="bg-slate-900 border border-slate-800 rounded p-2.5">
-          <span className="text-slate-400 text-[10px] uppercase block">Diverted Demand Rate</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono text-orange-400">
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold">Diverted Demand Rate</span>
+          <div className="my-2 flex items-baseline gap-1.5">
+            <span className="text-2xl lg:text-3xl font-bold font-mono text-orange-400">
               +{divertedDemandRate}
             </span>
-            <span className="text-[10px] text-slate-400">{selectedDrug?.unit}/day</span>
+            <span className="text-xs text-neutral-400">{selectedDrug?.unit}/day</span>
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">
-            {totalDivertedUnits > 0 ? `${totalDivertedUnits} cumulative units redirected` : "Awaiting threshold"}
+          <span className="text-xs text-neutral-500 block">
+            {totalDivertedUnits > 0 ? `${totalDivertedUnits} cumulative units redirected` : "Awaiting stockout threshold"}
           </span>
         </div>
 
         {/* 4. Cascade Wave Reached */}
-        <div className="bg-slate-900 border border-slate-800 rounded p-2.5">
-          <span className="text-slate-400 text-[10px] uppercase block">Cascade Wave Reached</span>
-          <div className="flex items-center gap-1 mt-1">
-            <Layers className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-            <span className="font-bold text-slate-200 text-[11px] block truncate">
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold">Cascade Wave Reached</span>
+          <div className="my-2 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-neutral-300 shrink-0" />
+            <span className="font-bold text-white text-sm block truncate">
               {cascadeWaveReached.split(" - ")[0]}
             </span>
           </div>
-          <span className="text-[9px] text-slate-400 block truncate mt-0.5">
-            {cascadeWaveReached.split(" - ")[1] || "Normal status"}
+          <span className="text-xs text-neutral-400 block truncate">
+            {cascadeWaveReached.split(" - ")[1] || "Baseline"}
           </span>
         </div>
 
         {/* 5. Expected Additional Stockouts */}
-        <div className="bg-slate-900 border border-slate-800 rounded p-2.5 col-span-2 sm:col-span-1">
-          <span className="text-slate-400 text-[10px] uppercase block">Additional Stockouts</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className={`text-xl font-bold font-mono ${expectedAdditionalStockouts > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-3.5 flex flex-col justify-between">
+          <span className="text-neutral-400 text-xs uppercase block font-semibold">Additional Stockouts</span>
+          <div className="my-2 flex items-baseline gap-1.5">
+            <span className={`text-2xl lg:text-3xl font-bold font-mono ${expectedAdditionalStockouts > 0 ? "text-rose-400" : "text-emerald-400"}`}>
               {expectedAdditionalStockouts}
             </span>
-            <span className="text-[10px] text-slate-400">secondary</span>
+            <span className="text-xs text-neutral-400">secondary sites</span>
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">
-            Accelerated ripple stockouts
+          <span className="text-xs text-neutral-500 block">
+            Accelerated ripple depletion
           </span>
         </div>
       </div>
 
-      {/* Ripple Spillover Network Explanation & Secondary Facilities Cards */}
-      <div className="p-3.5 space-y-2">
-        <div className="flex items-center justify-between text-[11px] text-slate-400">
-          <span className="uppercase tracking-wider font-bold text-slate-300">
-            Connected Referral Recipients Under Downstream Strain
+      {/* Connected Absorption Nodes & Propagation Logic */}
+      <div className="p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-400">
+          <span className="uppercase tracking-wider font-bold text-neutral-200">
+            Connected Referral Recipients Absorbing Deflected Patients
           </span>
-          <span className="text-slate-500">
-            Patients redirected from {primaryFacility?.name || "Primary"}
+          <span className="text-neutral-500 font-mono">
+            Directly coupled to {primaryFacility?.name || "the focal epicenter"}
           </span>
         </div>
 
         {secondaryFacilitiesAffected.length === 0 ? (
-          <div className="p-4 text-center text-slate-500 bg-slate-900/40 rounded border border-slate-800/60">
+          <div className="p-6 text-center text-neutral-500 bg-[#0a0a0a] rounded-lg border border-[#1f1f1f] text-xs">
             No secondary referral redirection links registered for this focal center.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {secondaryFacilitiesAffected.map((fac) => (
               <div
                 key={fac.id}
                 onClick={() => onSelectFacility(fac.id)}
-                className="p-2.5 bg-slate-900 border border-slate-800 hover:border-sky-500 rounded cursor-pointer transition-all flex items-center justify-between group"
+                className="p-4 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-neutral-400 rounded-lg cursor-pointer transition-all flex items-center justify-between group shadow-sm"
               >
                 <div>
-                  <div className="font-bold text-white text-[11px] group-hover:text-sky-300 flex items-center gap-1.5">
+                  <div className="font-bold text-white text-xs group-hover:text-neutral-200 flex items-center gap-2">
                     <span>{fac.name}</span>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="text-xs text-neutral-400 mt-1">
                     {fac.facilityType} &bull; {fac.district}
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-[10px] text-amber-400 font-bold block">
+                <div className="text-right shrink-0">
+                  <span className="text-xs text-amber-400 font-bold block">
                     Absorption Node
                   </span>
-                  <span className="text-[9px] text-sky-400 flex items-center justify-end group-hover:underline">
-                    Inspect <ArrowRight className="w-2.5 h-2.5 ml-0.5" />
+                  <span className="text-xs text-neutral-400 flex items-center justify-end group-hover:text-white mt-0.5">
+                    Inspect <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </span>
                 </div>
               </div>
@@ -167,11 +177,13 @@ export function CascadeSummary({
           </div>
         )}
 
-        <div className="bg-slate-900/60 rounded p-2.5 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
-          <span className="font-bold text-slate-200">Cascade Propagation Logic: </span>
-          When <span className="text-rose-300 font-bold">{primaryFacility?.name || "the primary hub"}</span> stocks out,
+        <div className="bg-[#0a0a0a] rounded-lg p-4 border border-[#1f1f1f] text-xs text-neutral-300 leading-relaxed font-sans">
+          <span className="font-bold text-white font-mono uppercase tracking-wider text-xs block mb-1">
+            Deterministic Ripple Mechanics:
+          </span>
+          When <span className="text-rose-400 font-semibold">{primaryFacility?.name || "the primary hub"}</span> depletes its inventory,
           unmet emergency prescription volume deflects onto connected referral facilities. This accelerates inventory depletion
-          across the secondary network and creates secondary stockouts unless preemptive inter-facility stock rebalancing or expedited procurement is triggered.
+          across the secondary network and precipitates secondary stockouts unless preemptive inter-facility stock rebalancing or emergency procurement dispatch is initiated.
         </div>
       </div>
     </div>
