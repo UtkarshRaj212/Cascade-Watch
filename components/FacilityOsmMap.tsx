@@ -89,12 +89,21 @@ export function FacilityOsmMap({
 
     setIsMapReady(true);
 
-    // Initial fit bounds if facilities exist
-    if (bounds && bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
-    }
+    // Initial fit bounds and invalidate size after DOM layout settles
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+      if (bounds && bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 12 });
+      }
+    }, 150);
+
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
 
     return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -357,9 +366,9 @@ export function FacilityOsmMap({
   };
 
   return (
-    <div className="flex flex-col h-full bg-black border border-[#222222] rounded-xl overflow-hidden shadow-sm">
+    <div className="relative isolate z-0 flex flex-col h-full w-full bg-black border border-[#222222] rounded-xl overflow-hidden shadow-sm">
       {/* Map Control Bar */}
-      <div className="flex flex-wrap items-center justify-between px-3.5 py-1.5 border-b border-[#222222] bg-[#0a0a0a] shrink-0 z-10">
+      <div className="relative z-20 flex flex-wrap items-center justify-between px-3.5 py-1.5 border-b border-[#222222] bg-[#0a0a0a] shrink-0">
         <div className="flex items-center gap-2.5">
           <MapIcon className="w-4 h-4 text-emerald-400" />
           <div>
@@ -367,9 +376,6 @@ export function FacilityOsmMap({
               <span className="font-semibold text-white text-sm uppercase tracking-wider font-mono block">
                 Healthcare Facility Network
               </span>
-              {/* <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 font-mono">
-                OSM Live
-              </span> */}
             </div>
             <span className="text-[11px] text-neutral-400 font-mono">
               Real geographic coordinates &bull; {facilityStates.length} monitoring sites &bull; Hold &amp; drag to pan
@@ -422,12 +428,12 @@ export function FacilityOsmMap({
       </div>
 
       {/* Map Leaflet Container */}
-      <div className="relative flex-1 bg-[#0a0a0a] min-h-0 w-full overflow-hidden">
+      <div className="relative z-10 flex-1 bg-[#0a0a0a] min-h-0 w-full overflow-hidden">
         <div ref={mapContainerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
       </div>
 
       {/* Map Footer Bar */}
-      <div className="px-3.5 py-1.5 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-[11px] text-neutral-400 font-mono shrink-0 z-10">
+      <div className="relative z-20 px-3.5 py-1.5 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-[11px] text-neutral-400 font-mono shrink-0">
         <span className="flex items-center gap-1.5">
           <span>Click any facility node to select &bull; Hold &amp; drag map to pan &bull; Scroll to zoom</span>
         </span>

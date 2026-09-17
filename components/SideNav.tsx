@@ -89,14 +89,14 @@ export function SideNav() {
       {isSideNavOpen && (
         <div
           onClick={() => setIsSideNavOpen(false)}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 transition-opacity duration-200"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] transition-opacity duration-200"
           aria-label="Close navigation sidebar"
         />
       )}
 
       {/* Navigation Drawer */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] bg-[#070707] border-r border-[#222222] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${isSideNavOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] bg-[#070707] border-r border-[#222222] z-[101] flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${isSideNavOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         {/* Drawer Header */}
