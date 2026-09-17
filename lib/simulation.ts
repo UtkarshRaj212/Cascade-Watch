@@ -267,8 +267,19 @@ export function runCascadeSimulation({
     const effectiveDaysCover =
       effectiveDemandAtDay > 0 ? Number((currentStockAtDay / effectiveDemandAtDay).toFixed(1)) : 0;
 
-    // Monte Carlo derived risk probability
-    const dynamicRiskProbability = mcFac.stockoutProbability;
+    // Calibrate dynamic risk probability based on simulation day, days cover, and Monte Carlo failure velocity
+    let dynamicRiskProbability = inv.riskProbability || mcFac.stockoutProbability;
+    if (isStockedOutNow || currentStockAtDay <= 0) {
+      dynamicRiskProbability = 1.0;
+    } else if (stockoutDayCalculated !== null && stockoutDayCalculated <= currentSimDay + 7) {
+      dynamicRiskProbability = Math.max(0.75, Math.min(0.98, mcFac.stockoutProbability));
+    } else if (effectiveDaysCover <= 5.5) {
+      dynamicRiskProbability = Math.max(0.75, inv.riskProbability);
+    } else if (effectiveDaysCover <= 14.0 || (stockoutDayCalculated !== null && stockoutDayCalculated <= currentSimDay + 16)) {
+      dynamicRiskProbability = Math.min(0.62, Math.max(0.35, inv.riskProbability));
+    } else if (effectiveDaysCover > 14.0) {
+      dynamicRiskProbability = Math.min(0.18, inv.riskProbability > 0 ? inv.riskProbability : 0.08);
+    }
 
     // Dynamic risk status
     let dynamicRiskStatus: "critical" | "warning" | "low" | "insufficient_data" = "low";
@@ -279,11 +290,24 @@ export function runCascadeSimulation({
       dynamicRiskStatus = "critical";
       criticalCount++;
       atRiskCount++;
-    } else if (dynamicRiskProbability >= 0.70 || effectiveDaysCover <= 5 || (stockoutDayCalculated !== null && stockoutDayCalculated <= 7)) {
+    } else if (
+      effectiveDaysCover <= 5.5 ||
+      (stockoutDayCalculated !== null && stockoutDayCalculated <= currentSimDay + 6) ||
+      (effectiveDaysCover <= 7.0 && dynamicRiskProbability >= 0.70)
+    ) {
       dynamicRiskStatus = "critical";
       criticalCount++;
       atRiskCount++;
-    } else if (dynamicRiskProbability >= 0.35 || effectiveDaysCover <= 10 || (stockoutDayCalculated !== null && stockoutDayCalculated <= horizonDays)) {
+    } else if (
+      effectiveDaysCover <= 14.0 ||
+      (stockoutDayCalculated !== null && stockoutDayCalculated <= currentSimDay + 16) ||
+      (effectiveDaysCover <= 18.0 && (
+        inv.replenishmentStatus === "Delayed" ||
+        inv.replenishmentStatus === "Critical Delay" ||
+        mcFac.cascadeVulnerabilityScore >= 0.35 ||
+        dynamicRiskProbability >= 0.35
+      ))
+    ) {
       dynamicRiskStatus = "warning";
       atRiskCount++;
     } else {

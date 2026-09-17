@@ -106,7 +106,7 @@ export function SideNav() {
               ▲
             </div>
             <div>
-              <span className="font-bold text-base text-white tracking-tight block font-mono">
+              <span className="font-bold text-lg text-white tracking-tight block font-mono">
                 MediRipple
               </span>
               <span className="text-[11px] text-neutral-400 font-mono">

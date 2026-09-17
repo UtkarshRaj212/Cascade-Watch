@@ -73,7 +73,7 @@ export function DashboardHeader() {
               ▲
             </div>
             <div className="min-w-0">
-              <span className="font-bold text-base tracking-tight text-white font-mono block leading-none">
+              <span className="font-bold text-lg tracking-tight text-white font-mono block leading-none">
                 MediRipple
               </span>
             </div>
