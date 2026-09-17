@@ -65,9 +65,7 @@ export function DashboardHeader() {
             aria-label="Toggle Side Menu"
           >
             <Menu className="w-5 h-5 text-neutral-300 group-hover:text-white" />
-            <span className="text-xs font-mono font-medium hidden sm:inline text-neutral-300 group-hover:text-white">
-              Navigation
-            </span>
+
           </button>
 
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -164,11 +162,10 @@ export function DashboardHeader() {
             id="run-analysis-btn"
             onClick={runAnalysis}
             disabled={isAnalyzing}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${
-              isAnalyzing
+            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${isAnalyzing
                 ? "bg-[#1f1f1f] text-neutral-400 border border-[#333333] cursor-wait"
                 : "bg-white text-black hover:bg-neutral-200 active:scale-[0.98]"
-            }`}
+              }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? "animate-spin text-neutral-400" : "text-black"}`} />
             <span>{isAnalyzing ? "Computing..." : "Run Analysis"}</span>

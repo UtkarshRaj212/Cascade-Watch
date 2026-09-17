@@ -62,9 +62,6 @@ export default function AlertsPage() {
                 Ranked Facility Risk Alerts &amp; Triage Feed
               </h1>
             </div>
-            <p className="text-xs text-neutral-400 font-mono mt-0.5">
-              Prioritized stockout hazard ranking based on current inventory, consumption spikes, and cascade spillover.
-            </p>
           </div>
         </div>
 
@@ -83,11 +80,10 @@ export default function AlertsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <button
           onClick={() => setStatusFilter("all")}
-          className={`p-3.5 rounded-xl text-left border transition-all ${
-            statusFilter === "all"
-              ? "bg-[#181818] border-white/40 shadow-md ring-1 ring-white/20"
-              : "bg-[#080808] border-[#222222] hover:border-[#383838]"
-          }`}
+          className={`p-3.5 rounded-xl text-left border transition-all ${statusFilter === "all"
+            ? "bg-[#181818] border-white/40 shadow-md ring-1 ring-white/20"
+            : "bg-[#080808] border-[#222222] hover:border-[#383838]"
+            }`}
         >
           <div className="flex items-center justify-between text-neutral-400 mb-1">
             <span className="text-[11px] font-mono uppercase tracking-wider">All Monitored</span>
@@ -99,11 +95,10 @@ export default function AlertsPage() {
 
         <button
           onClick={() => setStatusFilter("critical")}
-          className={`p-3.5 rounded-xl text-left border transition-all ${
-            statusFilter === "critical"
-              ? "bg-rose-950/60 border-rose-500 shadow-md ring-1 ring-rose-500/30"
-              : "bg-[#080808] border-[#222222] hover:border-rose-800/60"
-          }`}
+          className={`p-3.5 rounded-xl text-left border transition-all ${statusFilter === "critical"
+            ? "bg-rose-950/60 border-rose-500 shadow-md ring-1 ring-rose-500/30"
+            : "bg-[#080808] border-[#222222] hover:border-rose-800/60"
+            }`}
         >
           <div className="flex items-center justify-between text-rose-400 mb-1">
             <span className="text-[11px] font-mono uppercase tracking-wider">Critical Risk</span>
@@ -115,11 +110,10 @@ export default function AlertsPage() {
 
         <button
           onClick={() => setStatusFilter("warning")}
-          className={`p-3.5 rounded-xl text-left border transition-all ${
-            statusFilter === "warning"
-              ? "bg-amber-950/60 border-amber-500 shadow-md ring-1 ring-amber-500/30"
-              : "bg-[#080808] border-[#222222] hover:border-amber-800/60"
-          }`}
+          className={`p-3.5 rounded-xl text-left border transition-all ${statusFilter === "warning"
+            ? "bg-amber-950/60 border-amber-500 shadow-md ring-1 ring-amber-500/30"
+            : "bg-[#080808] border-[#222222] hover:border-amber-800/60"
+            }`}
         >
           <div className="flex items-center justify-between text-amber-400 mb-1">
             <span className="text-[11px] font-mono uppercase tracking-wider">Warning Buffer</span>
@@ -131,11 +125,10 @@ export default function AlertsPage() {
 
         <button
           onClick={() => setStatusFilter("low")}
-          className={`p-3.5 rounded-xl text-left border transition-all ${
-            statusFilter === "low"
-              ? "bg-emerald-950/60 border-emerald-500 shadow-md ring-1 ring-emerald-500/30"
-              : "bg-[#080808] border-[#222222] hover:border-emerald-800/60"
-          }`}
+          className={`p-3.5 rounded-xl text-left border transition-all ${statusFilter === "low"
+            ? "bg-emerald-950/60 border-emerald-500 shadow-md ring-1 ring-emerald-500/30"
+            : "bg-[#080808] border-[#222222] hover:border-emerald-800/60"
+            }`}
         >
           <div className="flex items-center justify-between text-emerald-400 mb-1">
             <span className="text-[11px] font-mono uppercase tracking-wider">Stable Buffer</span>
@@ -149,14 +142,8 @@ export default function AlertsPage() {
       {/* Main Alerts Feed Grid */}
       <div className="bg-[#080808] border border-[#222222] rounded-xl p-5 shadow-lg flex-1 min-h-[460px] flex flex-col">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#1c1c1c]">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-neutral-400" />
-            <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              Filtered Priority Queue ({filteredStates.length} items)
-            </span>
-          </div>
 
-          <div className="text-xs font-mono text-neutral-400">
+          <div className="text-sm font-mono text-neutral-400">
             Target Formulation: <span className="text-white font-semibold">{selectedDrug?.name}</span>
           </div>
         </div>

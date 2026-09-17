@@ -1,19 +1,31 @@
-import { db, facilities, drugs, facilityInventories, referralLinks } from "./index";
+import { eq } from "drizzle-orm";
+import {
+  db,
+  facilities,
+  drugs,
+  facilityInventories,
+  referralLinks,
+  monteCarloSimulations,
+  monteCarloFacilityMetrics,
+  monteCarloCascadeEdges,
+} from "./index";
 
 export interface DashboardDataPayload {
   facilities: (typeof facilities.$inferSelect)[];
   drugs: (typeof drugs.$inferSelect)[];
   inventories: (typeof facilityInventories.$inferSelect)[];
   referralLinks: (typeof referralLinks.$inferSelect)[];
+  monteCarloScenarios: (typeof monteCarloSimulations.$inferSelect)[];
 }
 
 export async function getDashboardData(): Promise<DashboardDataPayload> {
   try {
-    const [allFacilities, allDrugs, allInventories, allReferrals] = await Promise.all([
+    const [allFacilities, allDrugs, allInventories, allReferrals, allScenarios] = await Promise.all([
       db.select().from(facilities),
       db.select().from(drugs),
       db.select().from(facilityInventories),
       db.select().from(referralLinks),
+      db.select().from(monteCarloSimulations),
     ]);
 
     if (allFacilities.length > 0 && allDrugs.length > 0) {
@@ -22,6 +34,7 @@ export async function getDashboardData(): Promise<DashboardDataPayload> {
         drugs: allDrugs,
         inventories: allInventories,
         referralLinks: allReferrals,
+        monteCarloScenarios: allScenarios,
       };
     }
   } catch (error) {
@@ -90,5 +103,148 @@ export async function getDashboardData(): Promise<DashboardDataPayload> {
       { id: 15, sourceFacilityId: "fac-thane-chc-1", targetFacilityId: "fac-thane-dh", transferTimeHours: 1.1, transferVolumeShare: 0.40, referralType: "tertiary_escalation" },
       { id: 16, sourceFacilityId: "fac-thane-sdh-1", targetFacilityId: "fac-thane-dh", transferTimeHours: 0.7, transferVolumeShare: 0.65, referralType: "tertiary_escalation" },
     ],
+    monteCarloScenarios: [
+      { id: "mc-baseline-pune", scenarioName: "Baseline Operational Drift", district: "Pune", drugId: "drug-ceftriaxone", iterations: 500, horizonDays: 30, demandVolatility: 0.20, leadTimeDelayProb: 0.35, surgeProbability: 0.08, networkStockoutProbability: 0.88, expectedStockoutsCount: 3.4, p95UnmetDemand: 1850, createdAt: new Date() },
+      { id: "mc-surge-pune", scenarioName: "Monsoon Epidemic & Surge Shock", district: "Pune", drugId: "drug-ceftriaxone", iterations: 500, horizonDays: 30, demandVolatility: 0.35, leadTimeDelayProb: 0.40, surgeProbability: 0.22, networkStockoutProbability: 0.98, expectedStockoutsCount: 5.2, p95UnmetDemand: 3400, createdAt: new Date() },
+      { id: "mc-choke-thane", scenarioName: "Port Logistics & Supply Disruption", district: "Thane", drugId: "drug-ceftriaxone", iterations: 500, horizonDays: 30, demandVolatility: 0.18, leadTimeDelayProb: 0.70, surgeProbability: 0.06, networkStockoutProbability: 0.95, expectedStockoutsCount: 2.8, p95UnmetDemand: 1620, createdAt: new Date() },
+      { id: "mc-all-ceftriaxone", scenarioName: "State-Wide Referral Cascade Stress Test", district: "all", drugId: "drug-ceftriaxone", iterations: 500, horizonDays: 30, demandVolatility: 0.25, leadTimeDelayProb: 0.45, surgeProbability: 0.12, networkStockoutProbability: 0.99, expectedStockoutsCount: 6.8, p95UnmetDemand: 4600, createdAt: new Date() },
+    ],
   };
 }
+
+export async function getMonteCarloDetailsFromDb(simulationId?: string) {
+  try {
+    const allSims = await db.select().from(monteCarloSimulations);
+    const targetSim = simulationId
+      ? allSims.find((s) => s.id === simulationId)
+      : allSims[0];
+
+    if (targetSim) {
+      const [facMetrics, edges] = await Promise.all([
+        db.select().from(monteCarloFacilityMetrics).where(eq(monteCarloFacilityMetrics.simulationId, targetSim.id)),
+        db.select().from(monteCarloCascadeEdges).where(eq(monteCarloCascadeEdges.simulationId, targetSim.id)),
+      ]);
+
+      return {
+        simulation: targetSim,
+        allSimulations: allSims,
+        facilityMetrics: facMetrics,
+        cascadeEdges: edges,
+      };
+    }
+  } catch (err) {
+    console.error("Error querying monte carlo details from DB:", err);
+  }
+  return null;
+}
+
+export async function getMonteCarloSimulationsFromDb(district: string = "all", drugId: string = "drug-ceftriaxone") {
+  try {
+    const runs = await db.select().from(monteCarloSimulations);
+    if (runs.length > 0) {
+      const filtered = runs.filter(
+        (r) => (district === "all" || r.district.toLowerCase() === district.toLowerCase()) && r.drugId === drugId
+      );
+      return filtered;
+    }
+  } catch (err) {
+    console.error("Error querying monte_carlo_simulations from Postgres:", err);
+  }
+  return [];
+}
+
+export async function saveMonteCarloRunToDb(result: {
+  id: string;
+  scenarioName: string;
+  district: string;
+  drugId: string;
+  iterations: number;
+  horizonDays: number;
+  demandVolatility: number;
+  leadTimeDelayProb: number;
+  surgeProbability: number;
+  networkStockoutProbability: number;
+  expectedStockoutsCount: number;
+  p95UnmetDemand: number;
+  facilities: {
+    facilityId: string;
+    drugId: string;
+    stockoutProbability: number;
+    meanStockoutDay: number | null;
+    p10StockoutDay: number | null;
+    p50StockoutDay: number | null;
+    p90StockoutDay: number | null;
+    cascadeVulnerabilityScore: number;
+    cascadeContagionScore: number;
+    meanUnmetDemand: number;
+    trajectoryQuantiles: string;
+  }[];
+  edges: {
+    sourceFacilityId: string;
+    targetFacilityId: string;
+    drugId: string;
+    cascadeProbability: number;
+    meanDeflectedUnits: number;
+    daysAccelerated: number;
+    riskTier: "critical" | "high" | "moderate" | "low";
+  }[];
+}) {
+  try {
+    await db.insert(monteCarloSimulations).values({
+      id: result.id,
+      scenarioName: result.scenarioName,
+      district: result.district,
+      drugId: result.drugId,
+      iterations: result.iterations,
+      horizonDays: result.horizonDays,
+      demandVolatility: result.demandVolatility,
+      leadTimeDelayProb: result.leadTimeDelayProb,
+      surgeProbability: result.surgeProbability,
+      networkStockoutProbability: result.networkStockoutProbability,
+      expectedStockoutsCount: result.expectedStockoutsCount,
+      p95UnmetDemand: result.p95UnmetDemand,
+      createdAt: new Date(),
+    });
+
+    if (result.facilities.length > 0) {
+      await db.insert(monteCarloFacilityMetrics).values(
+        result.facilities.map((f) => ({
+          simulationId: result.id,
+          facilityId: f.facilityId,
+          drugId: f.drugId,
+          stockoutProbability: f.stockoutProbability,
+          meanStockoutDay: f.meanStockoutDay,
+          p10StockoutDay: f.p10StockoutDay,
+          p50StockoutDay: f.p50StockoutDay,
+          p90StockoutDay: f.p90StockoutDay,
+          cascadeVulnerabilityScore: f.cascadeVulnerabilityScore,
+          cascadeContagionScore: f.cascadeContagionScore,
+          meanUnmetDemand: f.meanUnmetDemand,
+          trajectoryQuantiles: f.trajectoryQuantiles,
+          createdAt: new Date(),
+        }))
+      );
+    }
+
+    if (result.edges.length > 0) {
+      await db.insert(monteCarloCascadeEdges).values(
+        result.edges.map((e) => ({
+          simulationId: result.id,
+          sourceFacilityId: e.sourceFacilityId,
+          targetFacilityId: e.targetFacilityId,
+          drugId: e.drugId,
+          cascadeProbability: e.cascadeProbability,
+          meanDeflectedUnits: e.meanDeflectedUnits,
+          daysAccelerated: e.daysAccelerated,
+          riskTier: e.riskTier,
+          createdAt: new Date(),
+        }))
+      );
+    }
+    return { success: true, id: result.id };
+  } catch (error) {
+    console.error("Failed to save Monte Carlo run to database:", error);
+    return { success: false, error: String(error) };
+  }
+}
+

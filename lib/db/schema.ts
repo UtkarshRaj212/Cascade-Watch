@@ -52,7 +52,56 @@ export const referralLinks = pgTable("referral_links", {
   referralType: text("referral_type").notNull().default("tertiary_escalation"), // 'tertiary_escalation' | 'peer_redirection'
 });
 
+export const monteCarloSimulations = pgTable("monte_carlo_simulations", {
+  id: text("id").primaryKey(),
+  scenarioName: text("scenario_name").notNull(),
+  district: text("district").notNull().default("all"),
+  drugId: text("drug_id").notNull().references(() => drugs.id),
+  iterations: integer("iterations").notNull().default(500),
+  horizonDays: integer("horizon_days").notNull().default(30),
+  demandVolatility: doublePrecision("demand_volatility").notNull().default(0.20),
+  leadTimeDelayProb: doublePrecision("lead_time_delay_prob").notNull().default(0.35),
+  surgeProbability: doublePrecision("surge_probability").notNull().default(0.10),
+  networkStockoutProbability: doublePrecision("network_stockout_probability").notNull(),
+  expectedStockoutsCount: doublePrecision("expected_stockouts_count").notNull(),
+  p95UnmetDemand: integer("p95_unmet_demand").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const monteCarloFacilityMetrics = pgTable("monte_carlo_facility_metrics", {
+  id: serial("id").primaryKey(),
+  simulationId: text("simulation_id").notNull().references(() => monteCarloSimulations.id, { onDelete: "cascade" }),
+  facilityId: text("facility_id").notNull().references(() => facilities.id),
+  drugId: text("drug_id").notNull().references(() => drugs.id),
+  stockoutProbability: doublePrecision("stockout_probability").notNull(), // 0.0 - 1.0
+  meanStockoutDay: doublePrecision("mean_stockout_day"),
+  p10StockoutDay: doublePrecision("p10_stockout_day"),
+  p50StockoutDay: doublePrecision("p50_stockout_day"),
+  p90StockoutDay: doublePrecision("p90_stockout_day"),
+  cascadeVulnerabilityScore: doublePrecision("cascade_vulnerability_score").notNull().default(0), // likelihood of being pushed into stockout by other facilities
+  cascadeContagionScore: doublePrecision("cascade_contagion_score").notNull().default(0), // expected number of downstream facility failures triggered
+  meanUnmetDemand: integer("mean_unmet_demand").notNull().default(0),
+  trajectoryQuantiles: text("trajectory_quantiles").notNull(), // JSON string array of { day, p10, p25, p50, p75, p90, mean }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const monteCarloCascadeEdges = pgTable("monte_carlo_cascade_edges", {
+  id: serial("id").primaryKey(),
+  simulationId: text("simulation_id").notNull().references(() => monteCarloSimulations.id, { onDelete: "cascade" }),
+  sourceFacilityId: text("source_facility_id").notNull().references(() => facilities.id),
+  targetFacilityId: text("target_facility_id").notNull().references(() => facilities.id),
+  drugId: text("drug_id").notNull().references(() => drugs.id),
+  cascadeProbability: doublePrecision("cascade_probability").notNull(), // P(target stocks out | source stocks out)
+  meanDeflectedUnits: doublePrecision("mean_deflected_units").notNull(),
+  daysAccelerated: doublePrecision("days_accelerated").notNull().default(0), // How many days earlier target depletes due to spillover
+  riskTier: text("risk_tier").notNull().default("moderate"), // 'critical' | 'high' | 'moderate' | 'low'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Facility = typeof facilities.$inferSelect;
 export type Drug = typeof drugs.$inferSelect;
 export type FacilityInventory = typeof facilityInventories.$inferSelect;
 export type ReferralLink = typeof referralLinks.$inferSelect;
+export type MonteCarloSimulation = typeof monteCarloSimulations.$inferSelect;
+export type MonteCarloFacilityMetric = typeof monteCarloFacilityMetrics.$inferSelect;
+export type MonteCarloCascadeEdge = typeof monteCarloCascadeEdges.$inferSelect;

@@ -96,9 +96,8 @@ export function SideNav() {
 
       {/* Navigation Drawer */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] bg-[#070707] border-r border-[#222222] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${
-          isSideNavOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 bottom-0 w-84 max-w-[88vw] bg-[#070707] border-r border-[#222222] z-50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl ${isSideNavOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Drawer Header */}
         <div className="p-5 border-b border-[#222222] flex items-center justify-between bg-black">
@@ -174,11 +173,10 @@ export function SideNav() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsSideNavOpen(false)}
-                className={`group w-full block p-3 rounded-lg border transition-all ${
-                  isActive
-                    ? "bg-[#181818] text-white border-[#383838] shadow-md ring-1 ring-white/10"
-                    : "text-neutral-400 hover:text-white hover:bg-[#111111] border-transparent hover:border-[#222222]"
-                }`}
+                className={`group w-full block p-3 rounded-lg border transition-all ${isActive
+                  ? "bg-[#181818] text-white border-[#383838] shadow-md ring-1 ring-white/10"
+                  : "text-neutral-400 hover:text-white hover:bg-[#111111] border-transparent hover:border-[#222222]"
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-md ${isActive ? "bg-black text-white" : "bg-[#141414] text-neutral-400 group-hover:text-white"}`}>
@@ -198,9 +196,8 @@ export function SideNav() {
 
                     {item.badge && (
                       <div className="mt-2">
-                        <span className={`inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded border ${
-                          item.badgeColor || "bg-[#161616] text-neutral-300 border-[#2b2b2b]"
-                        }`}>
+                        <span className={`inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded border ${item.badgeColor || "bg-[#161616] text-neutral-300 border-[#2b2b2b]"
+                          }`}>
                           {item.badge}
                         </span>
                       </div>
@@ -210,22 +207,6 @@ export function SideNav() {
               </Link>
             );
           })}
-        </div>
-
-        {/* System & Architecture Footer */}
-        <div className="p-4 border-t border-[#1f1f1f] bg-black text-[11px] font-mono space-y-2">
-          <div className="flex items-center justify-between text-neutral-400">
-            <div className="flex items-center gap-2">
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>PostgreSQL &bull; Drizzle ORM</span>
-            </div>
-            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">
-              LIVE
-            </span>
-          </div>
-          <p className="text-[10px] text-neutral-400 leading-relaxed">
-            Healthcare referral network flow simulator for proactive stockout mitigation.
-          </p>
         </div>
       </aside>
     </>

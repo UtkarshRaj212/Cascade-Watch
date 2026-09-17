@@ -72,6 +72,19 @@ export function StockTrajectoryChart({
     return `${pathD} L ${lastX} ${zeroY} L ${firstX} ${zeroY} Z`;
   }, [pathD, trajectory, horizonDays, maxStock]);
 
+  const confidenceBandD = useMemo(() => {
+    const pts = trajectory.filter((pt) => pt.day <= horizonDays && pt.confidenceUpper !== undefined);
+    if (pts.length === 0) return "";
+    const forward = pts
+      .map((pt, i) => `${i === 0 ? "M" : "L"} ${getX(pt.day).toFixed(1)} ${getY(pt.confidenceUpper ?? pt.stock).toFixed(1)}`)
+      .join(" ");
+    const backward = [...pts]
+      .reverse()
+      .map((pt) => `L ${getX(pt.day).toFixed(1)} ${getY(pt.confidenceLower ?? 0).toFixed(1)}`)
+      .join(" ");
+    return `${forward} ${backward} Z`;
+  }, [trajectory, horizonDays, maxStock]);
+
   const yTicks = [0, Math.round(maxStock * 0.33), Math.round(maxStock * 0.66), maxStock];
 
   const xStep = horizonDays <= 14 ? 2 : horizonDays <= 28 ? 5 : 7;
@@ -107,6 +120,9 @@ export function StockTrajectoryChart({
             <span className="w-3 h-0.5 bg-white inline-block"></span> Projected Stock Balance
           </span>
           <span className="flex items-center gap-1.5">
+            <span className="w-3 h-2 bg-sky-500/20 border border-sky-400/40 inline-block rounded-xs"></span> Projected Variance (P10–P90)
+          </span>
+          <span className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 border-b border-amber-400 border-dashed inline-block"></span> Safety Threshold
           </span>
           <span className="flex items-center gap-1.5">
@@ -140,6 +156,10 @@ export function StockTrajectoryChart({
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.28" />
               <stop offset="60%" stopColor="#ffffff" stopOpacity="0.05" />
               <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.2" />
+            </linearGradient>
+            <linearGradient id="confidenceGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.04" />
             </linearGradient>
           </defs>
 
@@ -233,6 +253,18 @@ export function StockTrajectoryChart({
             stroke="#e11d48"
             strokeWidth="1.8"
           />
+
+          {/* Projected Variance Band (P10 to P90) */}
+          {confidenceBandD && (
+            <path
+              d={confidenceBandD}
+              fill="url(#confidenceGrad)"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+              strokeOpacity="0.45"
+            />
+          )}
 
           {/* Stock Trajectory Area Fill */}
           <path d={areaD} fill="url(#stockAreaGradVercel)" />
@@ -372,6 +404,12 @@ export function StockTrajectoryChart({
                 <span className="text-neutral-500">Burn Velocity:</span>
                 <span>{activePoint.consumption} {selectedDrug?.unit}/d</span>
               </div>
+              {activePoint.confidenceLower !== undefined && activePoint.confidenceUpper !== undefined && (
+                <div className="flex justify-between gap-3 text-sky-400">
+                  <span className="text-neutral-500">Variance Range:</span>
+                  <span>{activePoint.confidenceLower} – {activePoint.confidenceUpper} {selectedDrug?.unit}</span>
+                </div>
+              )}
               {activePoint.divertedDemand > 0 && (
                 <div className="flex justify-between gap-3 text-rose-400">
                   <span>Cascade Spillover:</span>

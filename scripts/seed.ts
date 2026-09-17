@@ -1,10 +1,80 @@
-import { pool, db, facilities, drugs, facilityInventories, referralLinks } from "../lib/db";
+import {
+  pool,
+  db,
+  facilities,
+  drugs,
+  facilityInventories,
+  referralLinks,
+  monteCarloSimulations,
+  monteCarloFacilityMetrics,
+  monteCarloCascadeEdges,
+} from "../lib/db";
+import { runMonteCarloSimulation } from "../lib/monte-carlo";
 
 async function seed() {
   console.log("Seeding CascadeWatch database...");
 
+  // Create Monte Carlo tables if they do not exist
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS monte_carlo_simulations (
+      id TEXT PRIMARY KEY,
+      scenario_name TEXT NOT NULL,
+      district TEXT NOT NULL DEFAULT 'all',
+      drug_id TEXT NOT NULL REFERENCES drugs(id),
+      iterations INTEGER NOT NULL DEFAULT 500,
+      horizon_days INTEGER NOT NULL DEFAULT 30,
+      demand_volatility DOUBLE PRECISION NOT NULL DEFAULT 0.20,
+      lead_time_delay_prob DOUBLE PRECISION NOT NULL DEFAULT 0.35,
+      surge_probability DOUBLE PRECISION NOT NULL DEFAULT 0.10,
+      network_stockout_probability DOUBLE PRECISION NOT NULL,
+      expected_stockouts_count DOUBLE PRECISION NOT NULL,
+      p95_unmet_demand INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS monte_carlo_facility_metrics (
+      id SERIAL PRIMARY KEY,
+      simulation_id TEXT NOT NULL REFERENCES monte_carlo_simulations(id) ON DELETE CASCADE,
+      facility_id TEXT NOT NULL REFERENCES facilities(id),
+      drug_id TEXT NOT NULL REFERENCES drugs(id),
+      stockout_probability DOUBLE PRECISION NOT NULL,
+      mean_stockout_day DOUBLE PRECISION,
+      p10_stockout_day DOUBLE PRECISION,
+      p50_stockout_day DOUBLE PRECISION,
+      p90_stockout_day DOUBLE PRECISION,
+      cascade_vulnerability_score DOUBLE PRECISION NOT NULL DEFAULT 0,
+      cascade_contagion_score DOUBLE PRECISION NOT NULL DEFAULT 0,
+      mean_unmet_demand INTEGER NOT NULL DEFAULT 0,
+      trajectory_quantiles TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS monte_carlo_cascade_edges (
+      id SERIAL PRIMARY KEY,
+      simulation_id TEXT NOT NULL REFERENCES monte_carlo_simulations(id) ON DELETE CASCADE,
+      source_facility_id TEXT NOT NULL REFERENCES facilities(id),
+      target_facility_id TEXT NOT NULL REFERENCES facilities(id),
+      drug_id TEXT NOT NULL REFERENCES drugs(id),
+      cascade_probability DOUBLE PRECISION NOT NULL,
+      mean_deflected_units DOUBLE PRECISION NOT NULL,
+      days_accelerated DOUBLE PRECISION NOT NULL DEFAULT 0,
+      risk_tier TEXT NOT NULL DEFAULT 'moderate',
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+  `);
+
   // Clean existing tables
-  await pool.query("TRUNCATE TABLE referral_links, facility_inventories, drugs, facilities CASCADE;");
+  await pool.query(`
+    TRUNCATE TABLE
+      monte_carlo_cascade_edges,
+      monte_carlo_facility_metrics,
+      monte_carlo_simulations,
+      referral_links,
+      facility_inventories,
+      drugs,
+      facilities
+    CASCADE;
+  `);
 
   const facilityData = [
     // Pune District
@@ -536,7 +606,147 @@ async function seed() {
 
   await db.insert(facilityInventories).values(inventoryList);
 
-  console.log("Seeding complete! Inserted facilities, drugs, referral links, and inventory records.");
+  console.log("Seeding Monte Carlo simulation runs and cascading failure edges...");
+
+  const scenariosToSeed = [
+    {
+      id: "mc-baseline-pune",
+      scenarioName: "Baseline Operational Drift",
+      district: "Pune",
+      drugId: "drug-ceftriaxone",
+      iterations: 500,
+      horizonDays: 30,
+      demandVolatility: 0.20,
+      leadTimeDelayProb: 0.35,
+      surgeProbability: 0.08,
+      surgeMultiplier: 1.7,
+      spilloverVolatility: 0.15,
+      seed: 42,
+    },
+    {
+      id: "mc-surge-pune",
+      scenarioName: "Monsoon Epidemic & Surge Shock",
+      district: "Pune",
+      drugId: "drug-ceftriaxone",
+      iterations: 500,
+      horizonDays: 30,
+      demandVolatility: 0.35,
+      leadTimeDelayProb: 0.40,
+      surgeProbability: 0.22,
+      surgeMultiplier: 2.1,
+      spilloverVolatility: 0.25,
+      seed: 1337,
+    },
+    {
+      id: "mc-choke-thane",
+      scenarioName: "Port Logistics & Supply Disruption",
+      district: "Thane",
+      drugId: "drug-ceftriaxone",
+      iterations: 500,
+      horizonDays: 30,
+      demandVolatility: 0.18,
+      leadTimeDelayProb: 0.70,
+      surgeProbability: 0.06,
+      surgeMultiplier: 1.5,
+      spilloverVolatility: 0.15,
+      seed: 999,
+    },
+    {
+      id: "mc-all-ceftriaxone",
+      scenarioName: "State-Wide Referral Cascade Stress Test",
+      district: "all",
+      drugId: "drug-ceftriaxone",
+      iterations: 500,
+      horizonDays: 30,
+      demandVolatility: 0.25,
+      leadTimeDelayProb: 0.45,
+      surgeProbability: 0.12,
+      surgeMultiplier: 1.85,
+      spilloverVolatility: 0.20,
+      seed: 2026,
+    },
+  ];
+
+  // Fetch full lists from DB to ensure schema matching
+  const [seededFacilities, seededInventories, seededReferrals] = await Promise.all([
+    db.select().from(facilities),
+    db.select().from(facilityInventories),
+    db.select().from(referralLinks),
+  ]);
+
+  for (const scen of scenariosToSeed) {
+    const mcResult = runMonteCarloSimulation({
+      facilities: seededFacilities,
+      inventories: seededInventories,
+      referralLinks: seededReferrals,
+      selectedDrugId: scen.drugId,
+      selectedDistrict: scen.district,
+      iterations: scen.iterations,
+      horizonDays: scen.horizonDays,
+      demandVolatility: scen.demandVolatility,
+      leadTimeDelayProb: scen.leadTimeDelayProb,
+      surgeProbability: scen.surgeProbability,
+      surgeMultiplier: scen.surgeMultiplier,
+      spilloverVolatility: scen.spilloverVolatility,
+      scenarioName: scen.scenarioName,
+      seed: scen.seed,
+    });
+
+    await db.insert(monteCarloSimulations).values({
+      id: scen.id,
+      scenarioName: scen.scenarioName,
+      district: scen.district,
+      drugId: scen.drugId,
+      iterations: scen.iterations,
+      horizonDays: scen.horizonDays,
+      demandVolatility: scen.demandVolatility,
+      leadTimeDelayProb: scen.leadTimeDelayProb,
+      surgeProbability: scen.surgeProbability,
+      networkStockoutProbability: mcResult.networkStockoutProbability,
+      expectedStockoutsCount: mcResult.expectedStockoutsCount,
+      p95UnmetDemand: mcResult.p95UnmetDemandTotal,
+      createdAt: new Date(),
+    });
+
+    if (mcResult.facilityResults.length > 0) {
+      await db.insert(monteCarloFacilityMetrics).values(
+        mcResult.facilityResults.map((fr) => ({
+          simulationId: scen.id,
+          facilityId: fr.facility.id,
+          drugId: scen.drugId,
+          stockoutProbability: fr.stockoutProbability,
+          meanStockoutDay: fr.meanStockoutDay,
+          p10StockoutDay: fr.p10StockoutDay,
+          p50StockoutDay: fr.p50StockoutDay,
+          p90StockoutDay: fr.p90StockoutDay,
+          cascadeVulnerabilityScore: fr.cascadeVulnerabilityScore,
+          cascadeContagionScore: fr.cascadeContagionScore,
+          meanUnmetDemand: fr.meanUnmetDemand,
+          trajectoryQuantiles: JSON.stringify(fr.trajectoryQuantiles),
+          createdAt: new Date(),
+        }))
+      );
+    }
+
+    if (mcResult.cascadeEdges.length > 0) {
+      await db.insert(monteCarloCascadeEdges).values(
+        mcResult.cascadeEdges.map((e) => ({
+          simulationId: scen.id,
+          sourceFacilityId: e.sourceFacilityId,
+          targetFacilityId: e.targetFacilityId,
+          drugId: scen.drugId,
+          cascadeProbability: e.cascadeProbability,
+          meanDeflectedUnits: e.meanDeflectedUnits,
+          daysAccelerated: e.daysAccelerated,
+          riskTier: e.riskTier,
+          createdAt: new Date(),
+        }))
+      );
+    }
+    console.log(`Seeded Monte Carlo Scenario [${scen.scenarioName}] (${mcResult.facilityResults.length} facilities, ${mcResult.cascadeEdges.length} edges).`);
+  }
+
+  console.log("Seeding complete! Inserted facilities, drugs, referral links, inventories, and Monte Carlo models.");
 }
 
 seed()
