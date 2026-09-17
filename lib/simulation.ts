@@ -55,6 +55,15 @@ export interface SimulationResult {
   };
 }
 
+function hashString(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 export function runCascadeSimulation({
   facilities,
   inventories,
@@ -91,6 +100,12 @@ export function runCascadeSimulation({
   });
 
   // Execute underlying Monte Carlo stochastic simulation (300 iterations for sub-50ms instant response)
+  // Seeded deterministically from the forecast inputs so server (SSR) and client produce identical
+  // results (no hydration mismatch) and the same state always yields the same forecast.
+  const seedKey = `${selectedDrugId}|${selectedDistrict}|${horizonDays}|${inventories
+    .map((i) => i.id)
+    .sort()
+    .join(",")}`;
   const mcResult = runMonteCarloSimulation({
     facilities,
     inventories,
@@ -98,6 +113,7 @@ export function runCascadeSimulation({
     selectedDrugId,
     selectedDistrict,
     iterations: 300,
+    seed: hashString(seedKey),
     horizonDays,
     demandVolatility: 0.22,
     leadTimeDelayProb: 0.35,

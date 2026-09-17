@@ -12,12 +12,14 @@ import {
   TrendingDown,
   ShieldAlert,
   Building2,
+  ArrowRightLeft,
   Database,
   Calendar,
   ChevronRight,
   ExternalLink,
   MapPin,
   Pill,
+  ClipboardList,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 
@@ -79,6 +81,24 @@ export function SideNav() {
       badgeColor: "bg-neutral-900 text-neutral-300 border-neutral-700",
       description: "Single-facility operational deep dive & buffer stock",
       icon: Building2,
+      color: "text-amber-400",
+    },
+    {
+      href: "/redistribute",
+      label: "Redistribution Actions",
+      badge: "Optimizer",
+      badgeColor: "bg-emerald-950/80 text-emerald-300 border-emerald-800/60",
+      description: "Optimal stock transfers & emergency procurement plan",
+      icon: ArrowRightLeft,
+      color: "text-emerald-400",
+    },
+    {
+      href: "/inventory",
+      label: "Medicine & Stock Advisor",
+      badge: "Per-Hospital",
+      badgeColor: "bg-amber-950/80 text-amber-300 border-amber-800/60",
+      description: "Add/edit medicines, reorder date, 10 km nearby stock",
+      icon: ClipboardList,
       color: "text-amber-400",
     },
   ];

@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Building2,
   ChevronRight,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 
@@ -44,6 +45,10 @@ export function DashboardHeader() {
         return { label: "Ranked Risk Alerts", icon: ShieldAlert, color: "text-rose-500" };
       case "/facilities":
         return { label: "Facility Diagnostic Audit", icon: Building2, color: "text-amber-400" };
+      case "/redistribute":
+        return { label: "Redistribution Actions", icon: ArrowRightLeft, color: "text-emerald-400" };
+      case "/inventory":
+        return { label: "Medicine & Stock Advisor", icon: Pill, color: "text-amber-400" };
       default:
         return { label: "Network & Referral Map", icon: Network, color: "text-emerald-400" };
     }

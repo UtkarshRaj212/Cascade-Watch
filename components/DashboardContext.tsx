@@ -16,6 +16,10 @@ export interface DashboardContextType {
   drugs: Drug[];
   inventories: FacilityInventory[];
   referralLinks: ReferralLink[];
+  addDrugRecord: (drug: Drug) => void;
+  addInventoryRecord: (inventory: FacilityInventory) => void;
+  upsertInventory: (inventory: FacilityInventory) => void;
+  updateInventoryStock: (inventory: FacilityInventory) => void;
   districts: string[];
   selectedDistrict: string;
   setSelectedDistrict: (district: string) => void;
@@ -50,7 +54,9 @@ export function DashboardProvider({
   initialData: InitialDashboardData;
   children: React.ReactNode;
 }) {
-  const { facilities, drugs, inventories, referralLinks } = initialData;
+  const { facilities, referralLinks } = initialData;
+  const [drugs, setDrugs] = useState<Drug[]>(initialData.drugs);
+  const [inventories, setInventories] = useState<FacilityInventory[]>(initialData.inventories);
 
   const districts = useMemo(() => {
     return Array.from(new Set(facilities.map((f) => f.district))).sort();
@@ -137,11 +143,45 @@ export function DashboardProvider({
     setIsSideNavOpen((prev) => !prev);
   }, []);
 
+  const addDrugRecord = useCallback((drug: Drug) => {
+    setDrugs((prev) => (prev.some((d) => d.id === drug.id) ? prev : [...prev, drug]));
+  }, []);
+
+  const addInventoryRecord = useCallback((inventory: FacilityInventory) => {
+    setInventories((prev) =>
+      prev.some(
+        (i) => i.facilityId === inventory.facilityId && i.drugId === inventory.drugId
+      )
+        ? prev
+        : [...prev, inventory]
+    );
+  }, []);
+
+  const upsertInventory = useCallback((inventory: FacilityInventory) => {
+    setInventories((prev) => {
+      const idx = prev.findIndex(
+        (i) =>
+          i.id === inventory.id ||
+          (i.facilityId === inventory.facilityId && i.drugId === inventory.drugId)
+      );
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = inventory;
+        return next;
+      }
+      return [...prev, inventory];
+    });
+  }, []);
+
   const value = {
     facilities,
     drugs,
     inventories,
     referralLinks,
+    addDrugRecord,
+    addInventoryRecord,
+    upsertInventory,
+    updateInventoryStock: upsertInventory,
     districts,
     selectedDistrict,
     setSelectedDistrict: handleSelectDistrict,
