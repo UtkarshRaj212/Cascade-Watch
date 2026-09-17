@@ -12,7 +12,7 @@ import {
 import { runMonteCarloSimulation } from "../lib/monte-carlo";
 
 async function seed() {
-  console.log("Seeding CascadeWatch database...");
+  console.log("Seeding MediRipple database...");
 
   // Create Monte Carlo tables if they do not exist
   await pool.query(`

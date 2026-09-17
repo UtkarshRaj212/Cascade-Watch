@@ -107,7 +107,7 @@ export function SideNav() {
             </div>
             <div>
               <span className="font-bold text-base text-white tracking-tight block font-mono">
-                CascadeWatch
+                MediRipple
               </span>
               <span className="text-[11px] text-neutral-400 font-mono">
                 Supply Chain Intelligence

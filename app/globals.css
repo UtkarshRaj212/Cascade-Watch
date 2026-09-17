@@ -26,13 +26,45 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #000000;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #262626;
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #404040;
+}
+
+/* Custom Leaflet OpenStreetMap styling for MediRipple */
+.leaflet-container {
+  background: #0a0a0a !important;
+  font-family: var(--font-geist-mono), monospace !important;
+}
+
+.osm-custom-tooltip {
+  background: rgba(10, 10, 10, 0.95) !important;
+  border: 1px solid #333333 !important;
+  color: #ededed !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+}
+
+.osm-custom-tooltip::before {
+  border-top-color: #333333 !important;
+}
+
+.custom-facility-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cascade-badge-icon {
+  background: transparent !important;
+  border: none !important;
 }

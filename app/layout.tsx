@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CascadeWatch | Healthcare Supply-Chain Early Warning & Cascade Intelligence",
+  title: "MediRipple | Healthcare Supply-Chain Early Warning & Cascade Intelligence",
   description: "Decision-support system for predicting medicine stockouts and cascade ripple failures across referral healthcare networks.",
 };
 

@@ -74,7 +74,7 @@ export function DashboardHeader() {
             </div>
             <div className="min-w-0">
               <span className="font-bold text-base tracking-tight text-white font-mono block leading-none">
-                CascadeWatch
+                MediRipple
               </span>
             </div>
           </Link>
@@ -163,8 +163,8 @@ export function DashboardHeader() {
             onClick={runAnalysis}
             disabled={isAnalyzing}
             className={`flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${isAnalyzing
-                ? "bg-[#1f1f1f] text-neutral-400 border border-[#333333] cursor-wait"
-                : "bg-white text-black hover:bg-neutral-200 active:scale-[0.98]"
+              ? "bg-[#1f1f1f] text-neutral-400 border border-[#333333] cursor-wait"
+              : "bg-white text-black hover:bg-neutral-200 active:scale-[0.98]"
               }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? "animate-spin text-neutral-400" : "text-black"}`} />
