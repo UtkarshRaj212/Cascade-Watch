@@ -53,14 +53,14 @@ export function DashboardHeader() {
   const PageIcon = pageInfo.icon;
 
   return (
-    <header className="border-b border-[#222222] bg-black/95 backdrop-blur-md px-4 sm:px-6 py-3 sticky top-0 z-40 shrink-0">
-      <div className="max-w-[1750px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 sm:gap-4">
+    <header className="border-b border-[#222222] bg-black/95 backdrop-blur-md px-4 sm:px-6 py-2 xl:py-2.5 sticky top-0 z-40 shrink-0">
+      <div className="max-w-[1750px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2.5 sm:gap-3">
         {/* Left: Hamburger Button + Branding + Breadcrumb */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <button
             id="hamburger-menu-btn"
             onClick={toggleSideNav}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0e0e0e] border border-[#262626] hover:border-[#444444] hover:bg-[#161616] text-neutral-200 hover:text-white transition-all shadow-sm shrink-0 group"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#0e0e0e] border border-[#262626] hover:border-[#444444] hover:bg-[#161616] text-neutral-200 hover:text-white transition-all shadow-sm shrink-0 group"
             title="Open Navigation Menu"
             aria-label="Toggle Side Menu"
           >
@@ -93,7 +93,7 @@ export function DashboardHeader() {
         {/* Right: Operational Controls with shared context */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* District Selector */}
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs whitespace-nowrap shrink-0">
             <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
             <label htmlFor="district-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">
               District:
@@ -115,7 +115,7 @@ export function DashboardHeader() {
           </div>
 
           {/* Drug Selector */}
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs whitespace-nowrap shrink-0">
             <Pill className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
             <label htmlFor="drug-select" className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">
               Drug:
@@ -136,7 +136,7 @@ export function DashboardHeader() {
           </div>
 
           {/* Horizon Selector */}
-          <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222222] hover:border-[#333333] transition-colors rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs whitespace-nowrap shrink-0">
             <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0" />
             <span className="text-neutral-400 text-xs font-medium uppercase tracking-wider hidden xs:inline">Horizon:</span>
             <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ export function DashboardHeader() {
             id="run-analysis-btn"
             onClick={runAnalysis}
             disabled={isAnalyzing}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${isAnalyzing
+            className={`flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-sm whitespace-nowrap shrink-0 ${isAnalyzing
                 ? "bg-[#1f1f1f] text-neutral-400 border border-[#333333] cursor-wait"
                 : "bg-white text-black hover:bg-neutral-200 active:scale-[0.98]"
               }`}

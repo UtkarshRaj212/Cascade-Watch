@@ -96,53 +96,53 @@ export function FacilityRiskMap({
   return (
     <div className="flex flex-col h-full bg-black border border-[#222222] rounded-xl overflow-hidden shadow-sm">
       {/* Map Control Bar */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 border-b border-[#222222] bg-[#0a0a0a] shrink-0">
-        <div className="flex items-center gap-3">
-          <Network className="w-5 h-5 text-neutral-300" />
+      <div className="flex flex-wrap items-center justify-between px-3.5 py-1.5 border-b border-[#222222] bg-[#0a0a0a] shrink-0">
+        <div className="flex items-center gap-2.5">
+          <Network className="w-4 h-4 text-neutral-300" />
           <div>
-            <span className="font-semibold text-white text-sm uppercase tracking-wider font-mono block">
+            <span className="font-semibold text-white text-xs uppercase tracking-wider font-mono block">
               Healthcare Facility Risk & Referral Topology Map
             </span>
-            <span className="text-xs text-neutral-400 font-mono">
+            <span className="text-[11px] text-neutral-400 font-mono">
               Spatial nodes positioned by real geographic coordinates &bull; {facilityStates.length} monitoring sites
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {/* Legend */}
-          <div className="hidden lg:flex items-center gap-3.5 text-xs font-mono text-neutral-300 mr-2 border-r border-[#262626] pr-4">
+          <div className="hidden lg:flex items-center gap-3 text-[11px] font-mono text-neutral-300 mr-1 border-r border-[#262626] pr-3">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-rose-500"></span> Critical / Stockout
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Critical / Stockout
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-amber-500"></span> Warning Buffer
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Warning Buffer
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-emerald-500"></span> Healthy Reserve
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Healthy Reserve
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-neutral-600"></span> No Telemetry
+              <span className="w-2.5 h-2.5 rounded-full bg-neutral-600"></span> No Telemetry
             </span>
           </div>
 
           {/* Zoom Actions */}
-          <div className="flex items-center gap-1 bg-black border border-[#262626] rounded-lg p-1">
+          <div className="flex items-center gap-0.5 bg-black border border-[#262626] rounded-lg p-0.5">
             <button
               onClick={() => setZoomLevel((z) => Math.min(z + 0.25, 3))}
               title="Zoom In"
-              className="p-1.5 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded-md transition-colors"
+              className="p-1 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded transition-colors"
               aria-label="Zoom In"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setZoomLevel((z) => Math.max(z - 0.25, 0.75))}
               title="Zoom Out"
-              className="p-1.5 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded-md transition-colors"
+              className="p-1 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded transition-colors"
               aria-label="Zoom Out"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => {
@@ -150,10 +150,10 @@ export function FacilityRiskMap({
                 setPanOffset({ x: 0, y: 0 });
               }}
               title="Reset View"
-              className="p-1.5 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded-md transition-colors"
+              className="p-1 hover:bg-[#1a1a1a] text-neutral-300 hover:text-white rounded transition-colors"
               aria-label="Reset View"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -401,7 +401,7 @@ export function FacilityRiskMap({
       </div>
 
       {/* Map Footer Bar */}
-      <div className="px-4 py-2 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-xs text-neutral-400 font-mono shrink-0">
+      <div className="px-3.5 py-1.5 border-t border-[#222222] bg-[#0a0a0a] flex items-center justify-between text-[11px] text-neutral-400 font-mono shrink-0">
         <span>Click any facility node to inspect stock trajectory & referral cascade propagation</span>
         <span className="text-neutral-500 hidden sm:inline">Arrows indicate regional escalation / deflection direction</span>
       </div>
