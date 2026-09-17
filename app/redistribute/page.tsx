@@ -265,7 +265,7 @@ export default function RedistributePage() {
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-emerald-400" />
             <h2 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-              Prioritized Action Queue ({plan.actions.length} actions)
+              Prioritized Demand Facilities Queue ({plan.hospitalGroups.length} demand {plan.hospitalGroups.length === 1 ? "site" : "sites"} • {plan.actions.length} actions)
             </h2>
           </div>
           <span className="text-[11px] font-mono text-neutral-400">

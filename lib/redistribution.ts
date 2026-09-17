@@ -19,6 +19,8 @@ export interface TransferRecommendation {
   rationale: string;
   impactDaysCoverGained: number; // estimated days of cover the target gains
   sourceRemainingDaysCover: number; // donor's remaining days cover after transfer
+  sourceCurrentStock: number; // donor's stock before transfer
+  sourceStockAfter: number; // donor's stock after transfer
   costScore: number; // lower is better (considers distance, urgency, volume)
   referralLinkId: number | null;
 }
@@ -39,6 +41,22 @@ export interface EmergencyProcurementRecommendation {
 
 export type ActionRecommendation = TransferRecommendation | EmergencyProcurementRecommendation;
 
+export interface DemandHospitalGroup {
+  id: string;
+  facility: Facility;
+  urgency: UrgencyTier;
+  currentStock: number;
+  dailyConsumption: number;
+  daysUntilStockout: number | null;
+  totalDeficitUnits: number;
+  totalCoveredUnits: number;
+  unmetProcurementUnits: number;
+  isFullyCovered: boolean;
+  transfers: TransferRecommendation[];
+  procurement: EmergencyProcurementRecommendation | null;
+  combinedRationale: string;
+}
+
 export interface RedistributionPlan {
   generatedAt: string;
   drugId: string;
@@ -50,6 +68,7 @@ export interface RedistributionPlan {
   totalDeficitUnits: number;
   coverageRatio: number; // transferable / deficit (1.0 = fully coverable)
   actions: ActionRecommendation[];
+  hospitalGroups: DemandHospitalGroup[];
   summary: {
     transfers: number;
     procurements: number;
@@ -292,6 +311,8 @@ export function computeRedistributionPlan({
         rationale: buildTransferRationale(deficit, donor.surplus, transferQty, donor.transitTime),
         impactDaysCoverGained: daysCoverGained,
         sourceRemainingDaysCover: donorDaysCoverAfter,
+        sourceCurrentStock: donorInv.currentStock,
+        sourceStockAfter: donorStockAfter,
         costScore: donor.costScore,
         referralLinkId: donor.linkId,
       });
@@ -322,7 +343,50 @@ export function computeRedistributionPlan({
     }
   });
 
-  // ── Step 3: Merge and sort final action list ──
+  // ── Step 3: Group by Demand Hospital ──
+
+  const hospitalGroups: DemandHospitalGroup[] = deficitCandidates.map((deficit) => {
+    const facilityTransfers = transfers.filter((t) => t.targetFacility.id === deficit.facility.id);
+    const facilityProcurement = procurements.find((p) => p.facility.id === deficit.facility.id) || null;
+    const totalCovered = facilityTransfers.reduce((sum, t) => sum + t.quantity, 0);
+    const unmetNeeded = facilityProcurement ? facilityProcurement.quantityNeeded : 0;
+    const isFullyCovered = unmetNeeded === 0 && totalCovered > 0;
+
+    return {
+      id: `demand-group-${deficit.facility.id}`,
+      facility: deficit.facility,
+      urgency: deficit.urgency,
+      currentStock: deficit.inventory.currentStock,
+      dailyConsumption: deficit.inventory.avgDailyConsumption,
+      daysUntilStockout: deficit.daysUntilStockout,
+      totalDeficitUnits: deficit.deficitUnits,
+      totalCoveredUnits: totalCovered,
+      unmetProcurementUnits: unmetNeeded,
+      isFullyCovered,
+      transfers: facilityTransfers,
+      procurement: facilityProcurement,
+      combinedRationale: buildCombinedRationale({
+        facility: deficit.facility,
+        deficitUnits: deficit.deficitUnits,
+        daysUntilStockout: deficit.daysUntilStockout,
+        isStockedOut: deficit.state.isStockedOutNow,
+        transfers: facilityTransfers,
+        procurementNeeded: unmetNeeded,
+        drugUnit: drug.unit,
+      }),
+    };
+  });
+
+  // Sort hospital groups by urgency (emergency first), then by days until stockout
+  hospitalGroups.sort((a, b) => {
+    const urgDiff = urgencyPriority(a.urgency) - urgencyPriority(b.urgency);
+    if (urgDiff !== 0) return urgDiff;
+    const daysA = a.daysUntilStockout ?? 999;
+    const daysB = b.daysUntilStockout ?? 999;
+    return daysA - daysB;
+  });
+
+  // ── Step 4: Merge and sort final action list ──
 
   const allActions: ActionRecommendation[] = [
     ...procurements, // procurement first (can't be solved internally)
@@ -352,6 +416,7 @@ export function computeRedistributionPlan({
     totalDeficitUnits,
     coverageRatio: totalDeficitUnits > 0 ? Number((totalTransferableUnits / totalDeficitUnits).toFixed(2)) : 1,
     actions: allActions,
+    hospitalGroups,
     summary: {
       transfers: transfers.length,
       procurements: procurements.length,
@@ -365,6 +430,79 @@ export function computeRedistributionPlan({
 // ────────────────────────────────────────────────
 // Helper functions
 // ────────────────────────────────────────────────
+
+function buildCombinedRationale({
+  facility,
+  deficitUnits,
+  daysUntilStockout,
+  isStockedOut,
+  transfers,
+  procurementNeeded,
+  drugUnit,
+}: {
+  facility: Facility;
+  deficitUnits: number;
+  daysUntilStockout: number | null;
+  isStockedOut: boolean;
+  transfers: TransferRecommendation[];
+  procurementNeeded: number;
+  drugUnit: string;
+}): string {
+  const parts: string[] = [];
+  const name = facility.name;
+
+  // Demand rationale
+  if (isStockedOut) {
+    parts.push(
+      `${name} is currently STOCKED OUT with an immediate critical shortage of ${deficitUnits.toLocaleString()} ${drugUnit}.`
+    );
+  } else if (daysUntilStockout !== null && daysUntilStockout <= 3) {
+    parts.push(
+      `${name} faces critical stockout within ${daysUntilStockout} days (deficit of ${deficitUnits.toLocaleString()} ${drugUnit} below required safety buffer).`
+    );
+  } else if (daysUntilStockout !== null) {
+    parts.push(
+      `${name} is projected to exhaust inventory in ${daysUntilStockout} days, requiring ${deficitUnits.toLocaleString()} ${drugUnit} to restore baseline safety threshold.`
+    );
+  } else {
+    parts.push(
+      `${name} requires ${deficitUnits.toLocaleString()} ${drugUnit} to maintain prescribed safety stock buffer.`
+    );
+  }
+
+  // Sending Hospital(s) rationale
+  if (transfers.length > 0) {
+    const totalTransferred = transfers.reduce((sum, t) => sum + t.quantity, 0);
+    const donorClauses = transfers.map((t) => {
+      return `${t.sourceFacility.name} (stock: ${t.sourceCurrentStock} ${drugUnit}, sending ${t.quantity} ${drugUnit}, transit ${t.transitTimeHours}h, retains ${t.sourceRemainingDaysCover}d cover)`;
+    });
+
+    if (procurementNeeded === 0) {
+      parts.push(
+        `Inbound lateral transfer from ${donorClauses.join("; ")} fully satisfies this requirement (+${transfers.reduce((s, t) => s + t.impactDaysCoverGained, 0).toFixed(1)}d cover gained), leaving all donor sites with secure buffers.`
+      );
+    } else {
+      parts.push(
+        `Inbound lateral transfer from ${donorClauses.join("; ")} covers ${totalTransferred.toLocaleString()} ${drugUnit}.`
+      );
+    }
+  }
+
+  // Emergency Procurement rationale
+  if (procurementNeeded > 0) {
+    if (transfers.length > 0) {
+      parts.push(
+        `Remaining gap of ${procurementNeeded.toLocaleString()} ${drugUnit} exceeds available network surplus and must be procured externally via emergency supplier order.`
+      );
+    } else {
+      parts.push(
+        `Network surplus across connected facilities is insufficient to fulfill this volume laterally. Emergency external procurement of ${procurementNeeded.toLocaleString()} ${drugUnit} is required to prevent service disruption.`
+      );
+    }
+  }
+
+  return parts.join(" ");
+}
 
 function estimateTransitTime(a: Facility, b: Facility): number {
   // Haversine-based rough estimate: ~40 km/h average ground speed

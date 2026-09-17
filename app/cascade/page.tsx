@@ -114,8 +114,8 @@ export default function CascadePage() {
 
       {/* Grid: Cascade Summary & Simulation Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left: Cascade Summary Details (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col gap-4">
+        {/* Left: Cascade Summary Details (8 cols) */}
+        <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
           <CascadeSummary
             cascade={cascade}
             selectedDrug={selectedDrug}
@@ -124,8 +124,8 @@ export default function CascadePage() {
           />
         </div>
 
-        {/* Right: Cascade Ripple Metrics & Quick Actions (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        {/* Right: Cascade Ripple Metrics & Quick Actions (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-4 min-w-0">
           {/* Key Cascade Stats */}
           <div className="bg-[#080808] border border-[#222222] rounded-xl p-5 space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-[#1c1c1c]">
@@ -135,58 +135,58 @@ export default function CascadePage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f] flex flex-col justify-between">
                 <span className="text-[11px] font-mono text-neutral-400 block mb-1">
                   Primary Stockout Day
                 </span>
                 <span className="text-xl font-bold font-mono text-rose-400">
                   {cascade.primaryStockoutDay !== null ? `Day ${cascade.primaryStockoutDay}` : "No Stockout"}
                 </span>
-                <p className="text-[10px] text-neutral-400 mt-1">
+                <p className="text-[11px] text-neutral-400 mt-1.5 leading-snug break-words">
                   {cascade.primaryFacility?.name || "Target Facility"}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f]">
+              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f] flex flex-col justify-between">
                 <span className="text-[11px] font-mono text-neutral-400 block mb-1">
                   Deflected Demand Rate
                 </span>
                 <span className="text-xl font-bold font-mono text-amber-400">
                   +{cascade.divertedDemandRate} {selectedDrug?.unit || "units"}/day
                 </span>
-                <p className="text-[10px] text-neutral-400 mt-1">
+                <p className="text-[11px] text-neutral-400 mt-1.5 leading-snug">
                   Displaced to secondary facilities
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f]">
+              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f] flex flex-col justify-between">
                 <span className="text-[11px] font-mono text-neutral-400 block mb-1">
                   Cumulative Diverted Units
                 </span>
                 <span className="text-xl font-bold font-mono text-white">
                   {cascade.totalDivertedUnits} {selectedDrug?.unit || "units"}
                 </span>
-                <p className="text-[10px] text-neutral-400 mt-1">
+                <p className="text-[11px] text-neutral-400 mt-1.5 leading-snug">
                   As of simulation Day T+{currentSimDay}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f]">
+              <div className="p-3.5 rounded-lg bg-[#0e0e0e] border border-[#1f1f1f] flex flex-col justify-between">
                 <span className="text-[11px] font-mono text-neutral-400 block mb-1">
                   Cascade Secondary Failures
                 </span>
                 <span className={`text-xl font-bold font-mono ${cascade.expectedAdditionalStockouts > 0 ? "text-rose-500" : "text-emerald-400"}`}>
                   +{cascade.expectedAdditionalStockouts} facilities
                 </span>
-                <p className="text-[10px] text-neutral-400 mt-1">
+                <p className="text-[11px] text-neutral-400 mt-1.5 leading-snug">
                   Accelerated stockout risk
                 </p>
               </div>
             </div>
 
             {/* Spillover Warning Box */}
-            <div className="p-3 rounded-lg bg-rose-950/30 border border-rose-800/40 text-xs font-mono text-rose-200 flex items-start gap-2.5">
+            <div className="p-3.5 rounded-lg bg-rose-950/20 border border-rose-800/40 text-xs font-mono text-rose-200 flex items-start gap-3">
               <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <span className="font-bold text-rose-300 block">Proactive Transfer Notice</span>
@@ -198,18 +198,18 @@ export default function CascadePage() {
           </div>
 
           {/* Quick links to other analytics */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link
               href="/trajectory"
               className="p-4 rounded-xl bg-[#080808] hover:bg-[#111111] border border-[#222222] hover:border-[#383838] transition-all flex flex-col justify-between group"
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <TrendingDown className="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform" />
                 <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" />
               </div>
               <div>
                 <span className="text-xs font-bold text-white font-mono block">Stock Trajectory</span>
-                <span className="text-[11px] text-neutral-400">Inventory depletion curves &amp; stockout day</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block leading-snug">Inventory depletion curves &amp; stockout day</span>
               </div>
             </Link>
 
@@ -217,13 +217,13 @@ export default function CascadePage() {
               href="/alerts"
               className="p-4 rounded-xl bg-[#080808] hover:bg-[#111111] border border-[#222222] hover:border-[#383838] transition-all flex flex-col justify-between group"
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <ShieldAlert className="w-5 h-5 text-rose-500 group-hover:scale-110 transition-transform" />
                 <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" />
               </div>
               <div>
                 <span className="text-xs font-bold text-white font-mono block">Risk Alerts Feed</span>
-                <span className="text-[11px] text-neutral-400">Ranked facility emergencies &amp; actions</span>
+                <span className="text-[11px] text-neutral-400 mt-0.5 block leading-snug">Ranked facility emergencies &amp; actions</span>
               </div>
             </Link>
           </div>

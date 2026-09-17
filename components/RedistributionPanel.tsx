@@ -2,27 +2,18 @@
 
 import React, { useState } from "react";
 import {
-  ArrowRight,
   Truck,
   ShoppingCart,
-  AlertTriangle,
   CheckCircle2,
-  Clock,
   ArrowRightLeft,
   Building2,
-  Package,
   ChevronDown,
   ChevronUp,
   Zap,
-  Shield,
-  Info,
 } from "lucide-react";
 import type {
   RedistributionPlan,
-  ActionRecommendation,
-  TransferRecommendation,
-  EmergencyProcurementRecommendation,
-  UrgencyTier,
+  DemandHospitalGroup,
 } from "@/lib/redistribution";
 
 interface RedistributionPanelProps {
@@ -30,266 +21,283 @@ interface RedistributionPanelProps {
   unit: string;
 }
 
-function urgencyConfig(urgency: UrgencyTier) {
-  switch (urgency) {
-    case "emergency":
-      return {
-        label: "EMERGENCY",
-        color: "text-rose-400",
-        bg: "bg-rose-950/50",
-        border: "border-rose-700/60",
-        ring: "ring-rose-500/20",
-        dot: "bg-rose-500",
-        icon: Zap,
-      };
-    case "urgent":
-      return {
-        label: "URGENT",
-        color: "text-amber-400",
-        bg: "bg-amber-950/40",
-        border: "border-amber-700/50",
-        ring: "ring-amber-500/20",
-        dot: "bg-amber-500",
-        icon: AlertTriangle,
-      };
-    case "moderate":
-      return {
-        label: "MODERATE",
-        color: "text-sky-400",
-        bg: "bg-sky-950/30",
-        border: "border-sky-700/40",
-        ring: "ring-sky-500/20",
-        dot: "bg-sky-500",
-        icon: Shield,
-      };
-    case "advisory":
-      return {
-        label: "ADVISORY",
-        color: "text-neutral-400",
-        bg: "bg-neutral-900/40",
-        border: "border-neutral-700/40",
-        ring: "ring-neutral-500/20",
-        dot: "bg-neutral-500",
-        icon: Info,
-      };
-  }
-}
-
-function TransferCard({
-  action,
+function DemandHospitalCard({
+  group,
   unit,
   index,
 }: {
-  action: TransferRecommendation;
+  group: DemandHospitalGroup;
   unit: string;
   index: number;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const cfg = urgencyConfig(action.urgency);
-  const UrgencyIcon = cfg.icon;
+
+  const isEmergency = group.urgency === "emergency";
+  const isFullyCovered = group.isFullyCovered;
 
   return (
-    <div
-      className={`rounded-xl border ${cfg.border} ${cfg.bg} p-4 transition-all hover:shadow-lg`}
-    >
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-[#222222] bg-[#090909] hover:border-[#333333] p-4 sm:p-5 transition-all shadow-md font-mono space-y-4">
+      {/* Header Row: Demand Hospital Info & Shortage Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 border border-[#2a2a2a] shrink-0 mt-0.5">
-            <Truck className="w-4 h-4 text-emerald-400" />
+          <div
+            className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 mt-0.5 border ${
+              isEmergency
+                ? "bg-rose-950/40 border-rose-800/60 text-rose-400"
+                : isFullyCovered
+                  ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-400"
+                  : "bg-[#141414] border-[#2a2a2a] text-sky-400"
+            }`}
+          >
+            {isEmergency ? (
+              <Zap className="w-4 h-4" />
+            ) : isFullyCovered ? (
+              <CheckCircle2 className="w-4 h-4" />
+            ) : (
+              <Building2 className="w-4 h-4" />
+            )}
           </div>
+
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${cfg.border} ${cfg.color}`}
+                className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                  isEmergency
+                    ? "border-rose-700/60 bg-rose-950/50 text-rose-300"
+                    : "border-[#2f2f2f] bg-[#141414] text-neutral-300"
+                }`}
               >
-                <UrgencyIcon className="w-3 h-3 inline mr-1" />
-                {cfg.label}
+                {group.urgency}
               </span>
+
               <span className="text-[10px] font-mono text-neutral-500">
-                Action #{index + 1} • Transfer
+                Demand Site #{index + 1}
               </span>
+
+              {isFullyCovered ? (
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-emerald-800/60 bg-emerald-950/40 text-emerald-300 inline-flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Fully Covered via Lateral Transfers
+                </span>
+              ) : group.transfers.length > 0 ? (
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-sky-800/60 bg-sky-950/40 text-sky-300 inline-flex items-center gap-1">
+                  <ArrowRightLeft className="w-3 h-3" /> Partial Transfer + External Order
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-rose-800/60 bg-rose-950/40 text-rose-300 inline-flex items-center gap-1">
+                  <ShoppingCart className="w-3 h-3" /> External Emergency Procurement
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2 mt-2 text-sm font-mono">
-              <span className="font-bold text-white truncate max-w-[180px]">
-                {action.sourceFacility.name}
-              </span>
-              <ArrowRight className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="font-bold text-white truncate max-w-[180px]">
-                {action.targetFacility.name}
-              </span>
-            </div>
-          </div>
-        </div>
 
-        <div className="text-right shrink-0">
-          <span className="text-xl font-bold font-mono text-white block">
-            {action.quantity.toLocaleString()}
-          </span>
-          <span className="text-[11px] font-mono text-neutral-400">{unit}</span>
-        </div>
-      </div>
-
-      {/* Key Metrics Row */}
-      <div className="grid grid-cols-3 gap-2 mt-3">
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
-          <span className="text-[10px] font-mono text-neutral-500 block">
-            Transit Time
-          </span>
-          <span className="text-xs font-bold font-mono text-white">
-            {action.transitTimeHours}h
-          </span>
-        </div>
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
-          <span className="text-[10px] font-mono text-neutral-500 block">
-            Impact
-          </span>
-          <span className="text-xs font-bold font-mono text-emerald-400">
-            +{action.impactDaysCoverGained}d cover
-          </span>
-        </div>
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
-          <span className="text-[10px] font-mono text-neutral-500 block">
-            Donor Retains
-          </span>
-          <span className="text-xs font-bold font-mono text-white">
-            {action.sourceRemainingDaysCover}d cover
-          </span>
-        </div>
-      </div>
-
-      {/* Expandable Rationale */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 mt-3 text-[11px] font-mono text-neutral-400 hover:text-white transition-colors"
-      >
-        {expanded ? (
-          <ChevronUp className="w-3.5 h-3.5" />
-        ) : (
-          <ChevronDown className="w-3.5 h-3.5" />
-        )}
-        <span>{expanded ? "Hide" : "View"} rationale</span>
-      </button>
-      {expanded && (
-        <p className="mt-2 text-[11px] font-mono text-neutral-300 leading-relaxed p-3 rounded-lg bg-black/30 border border-[#1a1a1a]">
-          {action.rationale}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function ProcurementCard({
-  action,
-  unit,
-  index,
-}: {
-  action: EmergencyProcurementRecommendation;
-  unit: string;
-  index: number;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const cfg = urgencyConfig(action.urgency);
-  const UrgencyIcon = cfg.icon;
-
-  return (
-    <div
-      className={`rounded-xl border ${cfg.border} ${cfg.bg} p-4 transition-all hover:shadow-lg`}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 border border-[#2a2a2a] shrink-0 mt-0.5">
-            <ShoppingCart className="w-4 h-4 text-rose-400" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${cfg.border} ${cfg.color}`}
-              >
-                <UrgencyIcon className="w-3 h-3 inline mr-1" />
-                {cfg.label}
+            <div className="mt-2 text-sm sm:text-base font-mono flex flex-wrap items-baseline gap-2">
+              <span className="font-bold text-white text-base">
+                {group.facility.name}
               </span>
-              <span className="text-[10px] font-mono text-neutral-500">
-                Action #{index + 1} • Emergency Procurement
-              </span>
-            </div>
-            <div className="mt-2 text-sm font-mono">
-              <span className="font-bold text-white">
-                {action.facility.name}
-              </span>
-              <span className="text-neutral-500 ml-2">
-                {action.facility.facilityType}
+              <span className="text-xs text-neutral-400 font-sans">
+                {group.facility.facilityType} • {group.facility.district}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="text-right shrink-0">
-          <span className="text-xl font-bold font-mono text-rose-400 block">
-            {action.quantityNeeded.toLocaleString()}
+        <div className="text-left sm:text-right shrink-0 sm:pl-3">
+          <span className="text-2xl font-bold font-mono text-white block">
+            {group.totalDeficitUnits.toLocaleString()}
           </span>
           <span className="text-[11px] font-mono text-neutral-400">
-            {unit} needed
+            {unit} deficit / needed
           </span>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-3 gap-2 mt-3">
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
+      {/* Demand Hospital Key Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="p-2.5 rounded-lg bg-[#050505] border border-[#1a1a1a]">
           <span className="text-[10px] font-mono text-neutral-500 block">
             Current Stock
           </span>
-          <span className="text-xs font-bold font-mono text-white">
-            {action.currentStock} {unit}
+          <span className="text-xs sm:text-sm font-bold font-mono text-white">
+            {group.currentStock.toLocaleString()} {unit}
           </span>
         </div>
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
+
+        <div className="p-2.5 rounded-lg bg-[#050505] border border-[#1a1a1a]">
           <span className="text-[10px] font-mono text-neutral-500 block">
             Daily Burn
           </span>
-          <span className="text-xs font-bold font-mono text-amber-400">
-            {action.dailyConsumption} {unit}/day
+          <span className="text-xs sm:text-sm font-bold font-mono text-neutral-300">
+            {group.dailyConsumption} {unit}/day
           </span>
         </div>
-        <div className="p-2 rounded-lg bg-black/30 border border-[#1a1a1a]">
+
+        <div className="p-2.5 rounded-lg bg-[#050505] border border-[#1a1a1a]">
           <span className="text-[10px] font-mono text-neutral-500 block">
             Stockout In
           </span>
           <span
-            className={`text-xs font-bold font-mono ${action.daysUntilStockout !== null && action.daysUntilStockout <= 3 ? "text-rose-400" : "text-white"}`}
+            className={`text-xs sm:text-sm font-bold font-mono ${
+              group.daysUntilStockout !== null && group.daysUntilStockout <= 3
+                ? "text-rose-400"
+                : "text-white"
+            }`}
           >
-            {action.daysUntilStockout !== null
-              ? `${action.daysUntilStockout} days`
-              : "N/A"}
+            {group.daysUntilStockout !== null
+              ? `${group.daysUntilStockout} days`
+              : "Stocked Out"}
+          </span>
+        </div>
+
+        <div className="p-2.5 rounded-lg bg-[#050505] border border-[#1a1a1a]">
+          <span className="text-[10px] font-mono text-neutral-500 block">
+            Deficit Resolution
+          </span>
+          <span
+            className={`text-xs sm:text-sm font-bold font-mono ${
+              isFullyCovered
+                ? "text-emerald-400"
+                : group.totalCoveredUnits > 0
+                  ? "text-sky-400"
+                  : "text-rose-400"
+            }`}
+          >
+            {isFullyCovered
+              ? "100% Rebalanced"
+              : group.totalCoveredUnits > 0
+                ? `${group.totalCoveredUnits} transfer / ${group.unmetProcurementUnits} order`
+                : "100% External Order"}
           </span>
         </div>
       </div>
 
-      {/* Expandable Rationale */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 mt-3 text-[11px] font-mono text-neutral-400 hover:text-white transition-colors"
-      >
-        {expanded ? (
-          <ChevronUp className="w-3.5 h-3.5" />
-        ) : (
-          <ChevronDown className="w-3.5 h-3.5" />
-        )}
-        <span>{expanded ? "Hide" : "View"} rationale</span>
-      </button>
-      {expanded && (
-        <p className="mt-2 text-[11px] font-mono text-neutral-300 leading-relaxed p-3 rounded-lg bg-black/30 border border-[#1a1a1a]">
-          {action.rationale}
-        </p>
+      {/* Sending Hospital(s) Inbound Transfers (Displayed on the SAME card!) */}
+      {group.transfers.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-[#1a1a1a]">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center gap-1.5 text-emerald-400 font-bold uppercase tracking-wider text-[11px]">
+              <Truck className="w-3.5 h-3.5" />
+              <span>
+                Inbound Stock Transfers ({group.transfers.length} sending{" "}
+                {group.transfers.length === 1 ? "hospital" : "hospitals"})
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-neutral-400">
+              Total incoming: <strong className="text-emerald-400 font-mono">+{group.totalCoveredUnits.toLocaleString()} {unit}</strong>
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {group.transfers.map((t) => (
+              <div
+                key={t.id}
+                className="p-3 rounded-lg bg-[#050505] border border-[#1c1c1c] hover:border-[#2a2a2a] flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="font-bold text-white text-xs sm:text-sm font-mono">
+                      {t.sourceFacility.name}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 font-sans">
+                      ({t.sourceFacility.facilityType})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:gap-3 mt-1.5 text-[11px] font-mono text-neutral-400 flex-wrap">
+                    <span>
+                      Current Stock:{" "}
+                      <strong className="text-white font-mono">
+                        {t.sourceCurrentStock.toLocaleString()} {unit}
+                      </strong>
+                    </span>
+                    <span className="text-neutral-600">•</span>
+                    <span>
+                      Donor retains:{" "}
+                      <strong className="text-white font-mono">
+                        {t.sourceRemainingDaysCover}d cover
+                      </strong>
+                    </span>
+                    <span className="text-neutral-600">•</span>
+                    <span>
+                      Transit:{" "}
+                      <strong className="text-sky-400 font-mono">
+                        {t.transitTimeHours}h
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-left sm:text-right shrink-0 sm:border-l sm:border-[#1a1a1a] sm:pl-4">
+                  <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 block">
+                    +{t.quantity.toLocaleString()} {unit}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    +{t.impactDaysCoverGained}d cover gained
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
+
+      {/* External Procurement (if unmet deficit remains, on the SAME card!) */}
+      {group.procurement && (
+        <div className="pt-2 border-t border-[#1a1a1a]">
+          <div className="p-3 rounded-lg bg-rose-950/20 border border-rose-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <ShoppingCart className="w-4 h-4 text-rose-400 shrink-0" />
+              <div>
+                <span className="text-xs font-bold font-mono text-rose-300 block">
+                  External Emergency Procurement
+                </span>
+                <span className="text-[11px] text-neutral-400 font-mono">
+                  {group.transfers.length > 0
+                    ? "Remaining deficit exceeds lateral transfer surplus — external requisition required"
+                    : "Network surplus insufficient across referral chain — expedited purchase required"}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-left sm:text-right shrink-0">
+              <span className="text-sm sm:text-base font-bold font-mono text-rose-400 block">
+                {group.unmetProcurementUnits.toLocaleString()} {unit}
+              </span>
+              <span className="text-[10px] font-mono text-neutral-400">
+                external order
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unified Combined Rationale (includes both demand & donor details) */}
+      <div className="pt-1">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1.5 text-[11px] font-mono text-neutral-400 hover:text-white transition-colors"
+        >
+          {expanded ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
+          <span>{expanded ? "Hide" : "View"} unified allocation rationale</span>
+        </button>
+        {expanded && (
+          <div className="mt-2 text-[11px] sm:text-xs font-mono text-neutral-300 leading-relaxed p-3.5 rounded-lg bg-[#050505] border border-[#1a1a1a]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+              Operational Allocation Rationale:
+            </span>
+            <p>{group.combinedRationale}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export function RedistributionPanel({ plan, unit }: RedistributionPanelProps) {
-  if (plan.actions.length === 0) {
+  if (plan.hospitalGroups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-4" />
@@ -305,24 +313,15 @@ export function RedistributionPanel({ plan, unit }: RedistributionPanelProps) {
   }
 
   return (
-    <div className="space-y-3">
-      {plan.actions.map((action, idx) =>
-        action.type === "transfer" ? (
-          <TransferCard
-            key={action.id}
-            action={action as TransferRecommendation}
-            unit={unit}
-            index={idx}
-          />
-        ) : (
-          <ProcurementCard
-            key={action.id}
-            action={action as EmergencyProcurementRecommendation}
-            unit={unit}
-            index={idx}
-          />
-        )
-      )}
+    <div className="space-y-4">
+      {plan.hospitalGroups.map((group, idx) => (
+        <DemandHospitalCard
+          key={group.id}
+          group={group}
+          unit={unit}
+          index={idx}
+        />
+      ))}
     </div>
   );
 }
