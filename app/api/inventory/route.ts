@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
-import { db, facilities, drugs, facilityInventories } from "@/lib/db";
+import { db, facilities, drugs, facilityInventories, user } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { deriveInventoryFields, slugify } from "@/lib/stockInsights";
 import type { Drug, FacilityInventory } from "@/lib/db/schema";
 
@@ -19,6 +21,18 @@ function fallbackInventoryId() {
 // POST /api/inventory — add a medicine for a facility
 export async function POST(request: NextRequest) {
   try {
+    // 1. Enforce authentication
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required. Please sign in to manage inventory." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       facilityId,
@@ -36,6 +50,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "facilityId, currentStock and avgDailyConsumption are required" },
         { status: 400 }
+      );
+    }
+
+    // 2. Enforce hospital facility authorization
+    const [userRecord] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, session.user.id));
+
+    if (!userRecord?.assignedFacilityId || userRecord.assignedFacilityId !== facilityId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden: You are only authorized to manage inventory for your assigned hospital.",
+        },
+        { status: 403 }
       );
     }
 
@@ -170,6 +200,18 @@ export async function POST(request: NextRequest) {
 // PATCH /api/inventory — update an existing facility medicine record
 export async function PATCH(request: NextRequest) {
   try {
+    // 1. Enforce authentication
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required. Please sign in to update inventory." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { id, facilityId, drugId, ...fields } = body;
 
@@ -193,6 +235,22 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Unable to locate the inventory record" },
         { status: 404 }
+      );
+    }
+
+    // 2. Enforce hospital facility authorization
+    const [userRecord] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, session.user.id));
+
+    if (!userRecord?.assignedFacilityId || userRecord.assignedFacilityId !== resolveFacilityId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Forbidden: You are only authorized to modify inventory for your assigned hospital.",
+        },
+        { status: 403 }
       );
     }
 

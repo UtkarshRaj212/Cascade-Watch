@@ -16,8 +16,11 @@ import {
   Building2,
   ChevronRight,
   ArrowRightLeft,
+  User,
+  LogOut,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
+import { authClient } from "@/lib/auth-client";
 
 export function DashboardHeader() {
   const pathname = usePathname();
@@ -34,6 +37,8 @@ export function DashboardHeader() {
     isAnalyzing,
     toggleSideNav,
   } = useDashboard();
+
+  const { data: session } = authClient.useSession();
 
   const getPageTitle = () => {
     switch (pathname) {
@@ -175,6 +180,33 @@ export function DashboardHeader() {
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? "animate-spin text-neutral-400" : "text-black"}`} />
             <span>{isAnalyzing ? "Computing..." : "Run Analysis"}</span>
           </button>
+
+          {/* Auth Profile / Sign In */}
+          {session?.user ? (
+            <div className="flex items-center gap-2 bg-[#0e0e0e] border border-[#262626] rounded-lg px-2.5 py-1 text-xs whitespace-nowrap shrink-0">
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-[10px]">
+                {session.user.name ? session.user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+              <span className="font-mono text-neutral-200 text-xs hidden md:inline truncate max-w-[110px]">
+                {session.user.name || session.user.email}
+              </span>
+              <button
+                onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.reload() } })}
+                className="text-neutral-400 hover:text-rose-400 p-1 transition-colors cursor-pointer"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/signin"
+              className="flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] border border-[#262626] hover:border-[#383838] text-xs font-mono text-neutral-300 hover:text-white transition-all whitespace-nowrap shrink-0"
+            >
+              <User className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sign In</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

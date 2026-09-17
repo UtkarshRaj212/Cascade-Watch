@@ -20,8 +20,11 @@ import {
   MapPin,
   Pill,
   ClipboardList,
+  User,
+  LogOut,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
+import { authClient } from "@/lib/auth-client";
 
 export function SideNav() {
   const pathname = usePathname();
@@ -34,6 +37,8 @@ export function SideNav() {
     facilities,
     simulationResult,
   } = useDashboard();
+
+  const { data: session } = authClient.useSession();
 
   const criticalCount = simulationResult.kpis.criticalFacilities;
   const atRiskCount = simulationResult.kpis.facilitiesAtRisk;
@@ -227,6 +232,52 @@ export function SideNav() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Sidebar Auth Profile Footer */}
+        <div className="p-3 border-t border-[#1e1e1e] bg-[#0c0c0c] shrink-0">
+          {session?.user ? (
+            <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-[#141414] border border-[#262626]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+                  {session.user.name ? session.user.name.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-mono font-bold text-white truncate">
+                    {session.user.name || "Health Officer"}
+                  </p>
+                  <p className="text-[10px] font-mono text-neutral-400 truncate">
+                    {session.user.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.reload() } })}
+                className="p-1.5 rounded-md hover:bg-rose-950/40 text-neutral-400 hover:text-rose-400 transition-colors shrink-0 cursor-pointer"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/signin"
+                onClick={() => setIsSideNavOpen(false)}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white text-black font-mono text-xs font-bold hover:bg-neutral-200 transition-all text-center"
+              >
+                <User className="w-3.5 h-3.5 text-black" />
+                <span>Sign In</span>
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setIsSideNavOpen(false)}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#161616] hover:bg-[#202020] border border-[#2b2b2b] text-white font-mono text-xs transition-all text-center"
+              >
+                <span>Register</span>
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
     </>
